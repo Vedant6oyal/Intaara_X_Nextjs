@@ -38,10 +38,30 @@ const config: Config = {
         fill: {
           "0%": { width: "0%" },
         },
+        "slide-in": {
+          "0%": { transform: "translateX(100%)" },
+          "100%": { transform: "translateX(0)" },
+        },
+        "slide-out": {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(100%)" },
+        },
+        "fade-in": {
+          "0%": { opacity: "0" },
+          "100%": { opacity: "1" },
+        },
+        "fade-out": {
+          "0%": { opacity: "1" },
+          "100%": { opacity: "0" },
+        },
       },
       animation: {
         pop: "pop 0.25s ease-out",
         fill: "fill 0.6s ease-out",
+        "slide-in": "slide-in 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
+        "slide-out": "slide-out 0.25s cubic-bezier(0.32, 0.72, 0, 1)",
+        "fade-in": "fade-in 0.25s ease-out",
+        "fade-out": "fade-out 0.2s ease-in",
       },
     },
   },

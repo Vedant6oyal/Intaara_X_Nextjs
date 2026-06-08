@@ -15,7 +15,7 @@ export default function RedeemScreen({
   categories: Category[];
 }) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
-  const { gifts, giftTotal, cartCount, cartTotal } = useAppStore();
+  const { gifts, giftTotal, cartCount, cartTotal, openCart } = useAppStore();
 
   const filtered = useMemo(
     () =>
@@ -86,7 +86,10 @@ export default function RedeemScreen({
 
       {cartCount > 0 && (
         <div className="fixed inset-x-0 bottom-4 z-30 mx-auto w-full max-w-[480px] px-4">
-          <button className="flex w-full items-center justify-between rounded-2xl bg-terracotta-500 px-4 py-3 text-white shadow-lg transition hover:bg-terracotta-600">
+          <button
+            onClick={openCart}
+            className="flex w-full items-center justify-between rounded-2xl bg-terracotta-500 px-4 py-3 text-white shadow-lg transition hover:bg-terracotta-600"
+          >
             <span className="flex items-center gap-2 text-sm font-semibold">
               <ShoppingBag size={18} />
               {cartCount} item{cartCount > 1 ? "s" : ""} · ₹{cartTotal}
@@ -94,7 +97,7 @@ export default function RedeemScreen({
             <span className="flex items-center gap-1.5 text-sm font-bold">
               {gifts.length > 0
                 ? `Redeem ${gifts.length} gift${gifts.length > 1 ? "s" : ""}`
-                : "Checkout"}
+                : "View Cart"}
               <ArrowRight size={16} />
             </span>
           </button>

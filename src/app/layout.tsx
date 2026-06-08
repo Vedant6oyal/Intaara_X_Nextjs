@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { AppStoreProvider } from "@/store/AppStore";
 import Header from "@/components/Header";
+import CartDrawer from "@/components/CartDrawer";
 
 export const metadata: Metadata = {
   title: "Auradore · Gift & Redeem",
@@ -29,6 +30,7 @@ export default function RootLayout({
             <Header />
             <main className="flex-1">{children}</main>
           </div>
+          <CartDrawer />
         </AppStoreProvider>
       </body>
     </html>

@@ -60,8 +60,29 @@ npm run dev
 
 Open http://localhost:3000
 
+## Checkout
+
+The sticky button on `/redeem` posts cart + gift lines to
+`@/Users/vedantgoyal/Desktop/projects/giftbox-app/src/app/api/checkout/route.ts`,
+which calls Shopify's Storefront `cartCreate` mutation and redirects the user
+to the returned `checkoutUrl`. If your store has Shiprocket Checkout installed
+as a Shopify app, it will intercept that URL automatically — so the customer
+gets your usual Shiprocket flow without any extra integration here.
+
+Each gift line is tagged with the line-item attribute `_free_gift: true`, so
+you can:
+
+- create an automatic Shopify discount targeting that attribute, **or**
+- set `SHOPIFY_GIFT_DISCOUNT_CODE` in `.env.local` to a discount code that
+  zeroes those line items.
+
+## Persistence
+
+Selected gifts and cart contents are stored in `localStorage` under the key
+`giftbox-app:v1` (see `@/Users/vedantgoyal/Desktop/projects/giftbox-app/src/store/AppStore.tsx`).
+A refresh or new tab restores the previous selection.
+
 ## Roadmap
 
-- Wire the sticky checkout button on `/redeem` to Shiprocket Checkout
-  (separate pass; not implemented yet).
-- Persist cart/gift selection across sessions.
+- Optional: switch to direct Shiprocket Checkout API instead of the
+  Shopify-cart-handoff approach.

@@ -6,7 +6,7 @@ import { Menu, ShoppingBag, Gift } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 
 export default function Header({ title = "AURADORE" }: { title?: string }) {
-  const { cartCount, gifts } = useAppStore();
+  const { cartCount, gifts, openCart } = useAppStore();
   const pathname = usePathname();
   const isGiftScreen = pathname === "/";
 
@@ -51,14 +51,19 @@ export default function Header({ title = "AURADORE" }: { title?: string }) {
               </span>
             )}
           </div>
-          <div className="relative">
+          <button
+            type="button"
+            aria-label="Open cart"
+            onClick={openCart}
+            className="relative"
+          >
             <ShoppingBag size={22} />
             {cartCount > 0 && (
               <span className="absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full bg-sage-600 text-[10px] font-bold text-white">
                 {cartCount}
               </span>
             )}
-          </div>
+          </button>
         </div>
       </div>
     </header>
