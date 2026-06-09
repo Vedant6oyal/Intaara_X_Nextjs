@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ArrowRight, Gift, ShoppingBag } from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Gift, Pencil, ShoppingBag } from "lucide-react";
 import type { Category, Product } from "@/data/products";
 import { useAppStore } from "@/store/AppStore";
 import CategoryStrip from "@/components/CategoryStrip";
@@ -28,25 +29,61 @@ export default function RedeemScreen({
   return (
     <div className="pb-28">
       <section className="px-4 pt-3">
-        <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-sage-600 to-sage-700 p-3 text-white">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-white/15">
-            <Gift size={20} />
-          </span>
-          <div className="flex-1 text-sm">
-            {gifts.length > 0 ? (
-              <p className="font-semibold">
-                {gifts.length} free gift{gifts.length > 1 ? "s" : ""} (₹{giftTotal})
-                ready to redeem!
+        <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-sage-600 to-sage-700 px-3 py-2.5 text-white">
+          {gifts.length > 0 ? (
+            <>
+              <div className="flex shrink-0 items-center -space-x-2">
+                {gifts.slice(0, 4).map((g) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={g.id}
+                    src={g.image}
+                    alt={g.name}
+                    title={g.name}
+                    className="h-9 w-9 rounded-full object-cover ring-2 ring-sage-700"
+                  />
+                ))}
+                {gifts.length > 4 && (
+                  <span className="grid h-9 w-9 place-items-center rounded-full bg-white/20 text-[11px] font-bold ring-2 ring-sage-700">
+                    +{gifts.length - 4}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex-1 leading-tight">
+                <p className="font-serif text-lg font-bold tracking-tight tabular-nums">
+                  ₹{giftTotal.toLocaleString("en-IN")}
+                </p>
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-white/80">
+                  free gifts unlocked
+                </p>
+              </div>
+
+              <Link
+                href="/"
+                className="flex shrink-0 items-center gap-1 rounded-full bg-white/15 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-white ring-1 ring-white/25 transition hover:bg-white/25"
+              >
+                <Pencil size={12} />
+                Change
+              </Link>
+            </>
+          ) : (
+            <>
+              <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-white/15 ring-2 ring-dashed ring-white/60">
+                <Gift size={16} />
+              </span>
+              <p className="flex-1 text-sm font-semibold">
+                Pick free gifts to unlock with this order
               </p>
-            ) : (
-              <p className="font-semibold">No gifts selected yet</p>
-            )}
-            <p className="text-xs text-white/80">
-              {gifts.length > 0
-                ? "Buy any product below to unlock them free."
-                : "Go to Free Gifts to pick yours first."}
-            </p>
-          </div>
+              <Link
+                href="/"
+                className="flex shrink-0 items-center gap-1 rounded-full bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-wide text-sage-700 transition hover:bg-white/90"
+              >
+                Pick
+                <ArrowRight size={12} />
+              </Link>
+            </>
+          )}
         </div>
       </section>
 

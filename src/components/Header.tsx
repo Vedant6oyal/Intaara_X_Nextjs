@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Menu, ShoppingBag, Gift } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 
-export default function Header({ title = "AURADORE" }: { title?: string }) {
+export default function Header({ title = "INTAARA" }: { title?: string }) {
   const { cartCount, gifts, openCart } = useAppStore();
   const pathname = usePathname();
   const isGiftScreen = pathname === "/";

@@ -5,7 +5,7 @@ import Header from "@/components/Header";
 import CartDrawer from "@/components/CartDrawer";
 
 export const metadata: Metadata = {
-  title: "Auradore · Gift & Redeem",
+  title: "Intaara · Gift & Redeem",
   description:
     "Pick free anti-tarnish jewellery gifts worth up to ₹1000, then redeem them with your purchase.",
 };

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   ArrowRight,
@@ -9,10 +9,40 @@ import {
   Minus,
   Plus,
   ShoppingBag,
+  Sparkles,
   Trash2,
   X,
 } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
+
+/** Ease-out cubic; gives a satisfying decelerating count. */
+function easeOutCubic(t: number) {
+  return 1 - Math.pow(1 - t, 3);
+}
+
+/** requestAnimationFrame-based count-up. Restarts when `trigger` changes. */
+function useCountUp(target: number, trigger: unknown, duration = 800) {
+  const [value, setValue] = useState(0);
+  const rafRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    const start = performance.now();
+    const from = 0;
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - start) / duration);
+      setValue(Math.round(from + (target - from) * easeOutCubic(p)));
+      if (p < 1) rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [target, trigger, duration]);
+
+  return value;
+}
 
 export default function CartDrawer() {
   const {
@@ -230,11 +260,7 @@ export default function CartDrawer() {
                         </li>
                       ))}
                     </ul>
-                    {giftTotal > 0 && (
-                      <p className="mt-2 text-center text-[11px] text-sage-700">
-                        You&apos;re saving ₹{giftTotal} in free gifts.
-                      </p>
-                    )}
+                    {giftTotal > 0 && <SavingsBanner amount={giftTotal} open={cartOpen} />}
                   </div>
                 )}
               </>
@@ -293,6 +319,28 @@ export default function CartDrawer() {
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
+  );
+}
+
+function SavingsBanner({ amount, open }: { amount: number; open: boolean }) {
+  const value = useCountUp(amount, `${open}-${amount}`);
+
+  return (
+    <div
+      key={`${open}-${amount}`}
+      className="mt-3 flex items-center gap-2.5 rounded-xl border border-dashed border-emerald-300 bg-emerald-50 px-3.5 py-2.5 animate-pop"
+    >
+      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-700">
+        <Sparkles size={14} />
+      </span>
+      <p className="text-[13px] font-semibold leading-tight text-emerald-800">
+        <span className="font-bold">Yay!</span> you saved{" "}
+        <span className="font-bold tabular-nums">
+          ₹{value.toLocaleString("en-IN")}
+        </span>{" "}
+        with free gifts
+      </p>
+    </div>
   );
 }
 
