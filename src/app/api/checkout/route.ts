@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { shopifyFetch } from "@/lib/shopify";
 
 export const runtime = "nodejs";
 
@@ -9,27 +8,17 @@ type IncomingLine = {
   isGift?: boolean;
 };
 
-type CartCreateResponse = {
-  cartCreate: {
-    cart: { id: string; checkoutUrl: string } | null;
-    userErrors: Array<{ field: string[] | null; message: string }>;
-  };
-};
-
-const CART_CREATE = /* GraphQL */ `
-  mutation CartCreate($input: CartInput!) {
-    cartCreate(input: $input) {
-      cart {
-        id
-        checkoutUrl
-      }
-      userErrors {
-        field
-        message
-      }
-    }
-  }
-`;
+/**
+ * Extract the numeric variant id from either:
+ *   - "gid://shopify/ProductVariant/12345"  (Storefront GraphQL format)
+ *   - "12345"                               (already numeric)
+ */
+function numericVariantId(id: string): string | null {
+  const trimmed = id.trim();
+  if (/^\d+$/.test(trimmed)) return trimmed;
+  const match = trimmed.match(/ProductVariant\/(\d+)/);
+  return match ? match[1] : null;
+}
 
 export async function POST(req: Request) {
   let body: { lines?: IncomingLine[] };
@@ -39,53 +28,50 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
+  const domain = process.env.SHOPIFY_STORE_DOMAIN?.trim();
+  if (!domain) {
+    return NextResponse.json(
+      { error: "SHOPIFY_STORE_DOMAIN is not set" },
+      { status: 500 }
+    );
+  }
+
   const lines = (body.lines ?? []).filter(
     (l): l is IncomingLine =>
-      !!l && typeof l.variantId === "string" && typeof l.qty === "number" && l.qty > 0
+      !!l &&
+      typeof l.variantId === "string" &&
+      typeof l.qty === "number" &&
+      l.qty > 0
   );
 
   if (lines.length === 0) {
     return NextResponse.json({ error: "No line items" }, { status: 400 });
   }
 
-  const cartLines = lines.map((l) => ({
-    merchandiseId: l.variantId,
-    quantity: l.qty,
-    attributes: l.isGift ? [{ key: "_free_gift", value: "true" }] : undefined,
-  }));
+  // Build Shopify cart permalink: /cart/<vid>:<qty>,<vid>:<qty>
+  // We send the customer to the storefront cart page (not /checkout) so the
+  // Shiprocket Checkout theme script can intercept and open its modal.
+  const itemsParam = lines
+    .map((l) => {
+      const numeric = numericVariantId(l.variantId);
+      return numeric ? `${numeric}:${l.qty}` : null;
+    })
+    .filter((s): s is string => !!s)
+    .join(",");
 
-  const discountCode = process.env.SHOPIFY_GIFT_DISCOUNT_CODE?.trim();
-
-  const input: Record<string, unknown> = { lines: cartLines };
-  if (discountCode) input.discountCodes = [discountCode];
-
-  try {
-    const data = await shopifyFetch<CartCreateResponse>({
-      query: CART_CREATE,
-      variables: { input },
-      revalidate: 0,
-    });
-
-    const errors = data.cartCreate.userErrors;
-    if (errors.length > 0) {
-      return NextResponse.json(
-        { error: errors.map((e) => e.message).join("; ") },
-        { status: 400 }
-      );
-    }
-
-    const url = data.cartCreate.cart?.checkoutUrl;
-    if (!url) {
-      return NextResponse.json(
-        { error: "Shopify returned no checkout URL" },
-        { status: 502 }
-      );
-    }
-
-    return NextResponse.json({ url });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : "Checkout failed";
-    console.error("Shopify cartCreate failed:", err);
-    return NextResponse.json({ error: message }, { status: 502 });
+  if (!itemsParam) {
+    return NextResponse.json(
+      { error: "Could not resolve any variant IDs" },
+      { status: 400 }
+    );
   }
+
+  // Force Shopify to land the customer on /cart (not /checkouts/...) so the
+  // Shiprocket Checkout theme script can intercept. We send both params
+  // because behavior varies between Shopify plans / themes:
+  //   - redirect=no  : standard documented param
+  //   - return_to    : honored even when "skip cart" is configured
+  const url = `https://${domain}/cart/${itemsParam}?redirect=no&return_to=/cart`;
+
+  return NextResponse.json({ url });
 }
