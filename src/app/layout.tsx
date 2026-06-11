@@ -1,8 +1,16 @@
 import type { Metadata, Viewport } from "next";
+import { Cinzel } from "next/font/google";
 import "./globals.css";
 import { AppStoreProvider } from "@/store/AppStore";
 import Header from "@/components/Header";
 import CartDrawer from "@/components/CartDrawer";
+
+const cinzel = Cinzel({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  variable: "--font-cinzel",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Intaara · Gift & Redeem",
@@ -14,7 +22,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#7c9885",
+  themeColor: "#4b6143",
 };
 
 export default function RootLayout({
@@ -23,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" className={cinzel.variable} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <AppStoreProvider>
           <div className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col bg-cream shadow-xl">

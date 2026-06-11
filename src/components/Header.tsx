@@ -29,24 +29,24 @@ export default function Header({ title = "INTAARA" }: { title?: string }) {
 
   return (
     <header
-      className={`sticky top-0 z-30 bg-cream/95 backdrop-blur border-b border-black/5 transition-transform duration-300 ${
+      className={`sticky top-0 z-30 bg-sage-700/95 backdrop-blur border-b border-white/10 transition-transform duration-300 ${
         hidden ? "-translate-y-full" : "translate-y-0"
       }`}
     >
       <div className="flex items-center justify-between px-4 py-3">
-        <button aria-label="Menu" className="text-sage-800">
+        <button aria-label="Menu" className="text-cream/90 transition hover:text-white">
           <Menu size={24} />
         </button>
 
-        <h1 className="font-serif text-xl font-bold tracking-wide text-terracotta-600">
+        <h1 className="font-cinzel bg-gradient-to-b from-[#d4af37] via-[#f0d27a] to-[#a8801f] bg-clip-text text-xl font-bold tracking-[0.2em] text-transparent drop-shadow-[0_1px_0_rgba(0,0,0,0.06)]">
           {title}
         </h1>
 
-        <div className="flex items-center gap-3 text-sage-800">
+        <div className="flex items-center gap-3 text-cream/90">
           <div className="relative">
             <Gift size={22} />
             {gifts.length > 0 && (
-              <span className="absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full bg-terracotta-500 text-[10px] font-bold text-white">
+              <span className="absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full bg-terracotta-500 text-[10px] font-bold text-white ring-2 ring-sage-700">
                 {gifts.length}
               </span>
             )}
@@ -55,11 +55,11 @@ export default function Header({ title = "INTAARA" }: { title?: string }) {
             type="button"
             aria-label="Open cart"
             onClick={openCart}
-            className="relative"
+            className="relative transition hover:text-white"
           >
             <ShoppingBag size={22} />
             {cartCount > 0 && (
-              <span className="absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full bg-sage-600 text-[10px] font-bold text-white">
+              <span className="absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full bg-[#d4af37] text-[10px] font-bold text-sage-900 ring-2 ring-sage-700">
                 {cartCount}
               </span>
             )}

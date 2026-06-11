@@ -10,7 +10,7 @@ import React, {
 } from "react";
 import { type Product } from "@/data/products";
 
-const MAX_GIFTS = 5;
+const MAX_GIFTS = 2;
 const STORAGE_KEY = "giftbox-app:v1";
 
 type CartLine = { product: Product; qty: number };
@@ -73,7 +73,8 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const persisted = loadPersisted();
     if (persisted) {
-      setGifts(persisted.gifts);
+      // Trim any stale state saved when the gift limit was higher.
+      setGifts(persisted.gifts.slice(0, MAX_GIFTS));
       setCart(persisted.cart);
     }
     setHydrated(true);

@@ -1,47 +1,86 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Gift, PartyPopper, RefreshCw, Sparkles } from "lucide-react";
 import Link from "next/link";
 import type { Product } from "@/data/products";
 import { useAppStore } from "@/store/AppStore";
+import { useCountUp } from "@/hooks/useCountUp";
 import GiftCard from "@/components/GiftCard";
 import GiftProgressBar from "@/components/GiftProgressBar";
 
 export default function GiftingScreen({ products }: { products: Product[] }) {
-  const { gifts, giftsFull } = useAppStore();
+  const { gifts, giftTotal, giftsFull, hydrated } = useAppStore();
   const [showPopup, setShowPopup] = useState(false);
 
+  // Only fire when the box *transitions* from not-full → full after hydration.
+  // Prevents re-showing on every page load when the user already has 2 gifts.
+  const prevFull = useRef<boolean | null>(null);
   useEffect(() => {
-    if (giftsFull) setShowPopup(true);
-  }, [giftsFull]);
+    if (!hydrated) return;
+    if (prevFull.current === false && giftsFull) {
+      setShowPopup(true);
+    }
+    prevFull.current = giftsFull;
+  }, [giftsFull, hydrated]);
+
+  // Animated total inside the popup; restarts when popup opens.
+  const popupTotal = useCountUp(giftTotal, showPopup, 900);
 
   return (
     <div className="pb-8">
       {showPopup && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6">
-          <div className="w-full max-w-sm animate-pop rounded-2xl bg-white p-6 text-center shadow-2xl">
-            <span className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-full bg-sage-100">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6 animate-fade-in"
+          onClick={() => setShowPopup(false)}
+        >
+          <div
+            className="relative w-full max-w-sm animate-pop overflow-hidden rounded-2xl bg-white p-6 text-center shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Confetti shower */}
+            <div className="pointer-events-none absolute inset-0 overflow-hidden">
+              {CONFETTI.map((c, i) => (
+                <span
+                  key={i}
+                  aria-hidden
+                  className="absolute top-0 block h-2 w-2 rounded-sm animate-confetti"
+                  style={{
+                    left: `${c.left}%`,
+                    backgroundColor: c.color,
+                    animationDelay: `${c.delay}s`,
+                    animationDuration: `${c.duration}s`,
+                  }}
+                />
+              ))}
+            </div>
+
+            <span className="relative mx-auto mb-3 grid h-14 w-14 place-items-center rounded-full bg-sage-100">
               <PartyPopper size={28} className="text-sage-700" />
             </span>
-            <h3 className="text-lg font-bold text-gray-800">
+            <h3 className="relative font-cinzel text-xl font-bold tracking-wide text-sage-800">
               Your gift box is ready!
             </h3>
-            <p className="mt-1 text-sm text-gray-500">
-              You&apos;ve picked 5 free gifts. Redeem them on your first
-              purchase!
+            <p className="relative mt-3 font-cinzel text-3xl font-bold tabular-nums text-terracotta-500">
+              ₹{popupTotal.toLocaleString("en-IN")}
+            </p>
+            <p className="relative -mt-0.5 text-[11px] font-bold uppercase tracking-[0.18em] text-sage-700">
+              worth, yours free
+            </p>
+            <p className="relative mt-2 text-xs text-gray-500">
+              Buy any product on the next screen to claim them at ₹0.
             </p>
 
             <Link
               href="/redeem"
-              className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-terracotta-500 py-3 text-sm font-semibold text-white shadow transition hover:bg-terracotta-600"
+              className="relative mt-5 flex items-center justify-center gap-2 rounded-xl bg-terracotta-500 py-3 text-sm font-semibold text-white shadow transition hover:bg-terracotta-600"
             >
               Redeem My Gifts <ArrowRight size={16} />
             </Link>
 
             <button
               onClick={() => setShowPopup(false)}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-sage-100 py-3 text-sm font-semibold text-sage-700 transition hover:bg-sage-200"
+              className="relative mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-sage-100 py-3 text-sm font-semibold text-sage-700 transition hover:bg-sage-200"
             >
               <RefreshCw size={15} /> Change Selection
             </button>
@@ -123,6 +162,22 @@ function Step({ n, text }: { n: number; text: string }) {
     </div>
   );
 }
+
+// Pre-randomised confetti config so it's stable across re-renders within a
+// session and doesn't mismatch between SSR and CSR.
+const CONFETTI_COLORS = [
+  "#d4af37", // gold
+  "#f0d27a", // light gold
+  "#b9694f", // terracotta
+  "#5f7a54", // sage-600
+  "#7c9885", // sage-500
+];
+const CONFETTI = Array.from({ length: 24 }, (_, i) => ({
+  left: (i * 4.17 + (i % 5) * 7) % 100,
+  color: CONFETTI_COLORS[i % CONFETTI_COLORS.length],
+  delay: (i % 8) * 0.12,
+  duration: 1.8 + (i % 5) * 0.2,
+}));
 
 function EmptyState({ message }: { message: string }) {
   return (

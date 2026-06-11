@@ -29,6 +29,7 @@ const config: Config = {
       },
       fontFamily: {
         serif: ["Georgia", "Cambria", "Times New Roman", "serif"],
+        cinzel: ["var(--font-cinzel)", "Georgia", "serif"],
       },
       keyframes: {
         pop: {
@@ -54,6 +55,13 @@ const config: Config = {
           "0%": { opacity: "1" },
           "100%": { opacity: "0" },
         },
+        confetti: {
+          "0%": { transform: "translateY(-20px) rotate(0deg)", opacity: "1" },
+          "100%": {
+            transform: "translateY(360px) rotate(720deg)",
+            opacity: "0",
+          },
+        },
       },
       animation: {
         pop: "pop 0.25s ease-out",
@@ -62,6 +70,7 @@ const config: Config = {
         "slide-out": "slide-out 0.25s cubic-bezier(0.32, 0.72, 0, 1)",
         "fade-in": "fade-in 0.25s ease-out",
         "fade-out": "fade-out 0.2s ease-in",
+        confetti: "confetti 2.4s ease-in forwards",
       },
     },
   },
