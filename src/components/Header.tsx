@@ -9,12 +9,14 @@ export default function Header({ title = "INTAARA" }: { title?: string }) {
   const { cartCount, gifts, openCart } = useAppStore();
   const pathname = usePathname();
   const isGiftScreen = pathname === "/";
+  const isRedeemScreen = pathname === "/redeem";
+  const shouldHideOnScroll = isGiftScreen || isRedeemScreen;
 
   const [hidden, setHidden] = useState(false);
   const lastScrollY = useRef(0);
 
   useEffect(() => {
-    if (!isGiftScreen) {
+    if (!shouldHideOnScroll) {
       setHidden(false);
       return;
     }
@@ -25,7 +27,7 @@ export default function Header({ title = "INTAARA" }: { title?: string }) {
 
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [isGiftScreen]);
+  }, [shouldHideOnScroll]);
 
   return (
     <header
@@ -33,14 +35,16 @@ export default function Header({ title = "INTAARA" }: { title?: string }) {
         hidden ? "-translate-y-full" : "translate-y-0"
       }`}
     >
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="flex items-center justify-between px-4 py-2">
         <button aria-label="Menu" className="text-cream/90 transition hover:text-white">
           <Menu size={24} />
         </button>
 
-        <h1 className="font-cinzel bg-gradient-to-b from-[#d4af37] via-[#f0d27a] to-[#a8801f] bg-clip-text text-xl font-bold tracking-[0.2em] text-transparent drop-shadow-[0_1px_0_rgba(0,0,0,0.06)]">
-          {title}
-        </h1>
+        <img
+          src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Intaara_logo_text_gold.avif"
+          alt={title}
+          className="h-10 w-auto object-contain"
+        />
 
         <div className="flex items-center gap-3 text-cream/90">
           <div className="relative">

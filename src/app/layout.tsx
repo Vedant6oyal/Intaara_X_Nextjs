@@ -16,13 +16,17 @@ export const metadata: Metadata = {
   title: "Intaara · Gift & Redeem",
   description:
     "Pick free anti-tarnish jewellery gifts worth up to ₹1000, then redeem them with your purchase.",
+  icons: {
+    icon: "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Intaara_Favicon.avif",
+    apple: "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Intaara_Favicon.avif",
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
-  themeColor: "#4b6143",
+  themeColor: "#1A3C2A",
 };
 
 export default function RootLayout({

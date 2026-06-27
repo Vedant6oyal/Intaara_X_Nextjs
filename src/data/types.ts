@@ -16,6 +16,8 @@ export type Product = {
   category?: string;
   /** Raw Shopify tags, useful for filtering. */
   tags?: string[];
+  /** Shopify collection IDs this product belongs to, used for category filtering. */
+  collections?: string[];
 };
 
 export type Category = {

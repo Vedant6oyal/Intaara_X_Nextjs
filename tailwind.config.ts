@@ -15,17 +15,17 @@ const config: Config = {
           300: "#a6bd97",
           400: "#8aa67a",
           500: "#7c9885",
-          600: "#5f7a54",
-          700: "#4b6143",
-          800: "#3d4e38",
-          900: "#334130",
+          600: "#1A3C2A",
+          700: "#1A3C2A",
+          800: "#1A3C2A",
+          900: "#1A3C2A",
         },
         terracotta: {
           400: "#c8806a",
           500: "#b9694f",
           600: "#a3543b",
         },
-        cream: "#f6f4ef",
+        cream: "#ffffff",
       },
       fontFamily: {
         serif: ["Georgia", "Cambria", "Times New Roman", "serif"],
@@ -62,6 +62,18 @@ const config: Config = {
             opacity: "0",
           },
         },
+        "cta-glow": {
+          "0%, 100%": {
+            transform: "scale(1)",
+            boxShadow:
+              "0 6px 18px -4px rgba(26, 60, 42, 0.45), 0 0 0 0 rgba(26, 60, 42, 0.55)",
+          },
+          "50%": {
+            transform: "scale(1.025)",
+            boxShadow:
+              "0 10px 24px -4px rgba(26, 60, 42, 0.6), 0 0 0 10px rgba(26, 60, 42, 0)",
+          },
+        },
       },
       animation: {
         pop: "pop 0.25s ease-out",
@@ -71,6 +83,7 @@ const config: Config = {
         "fade-in": "fade-in 0.25s ease-out",
         "fade-out": "fade-out 0.2s ease-in",
         confetti: "confetti 2.4s ease-in forwards",
+        "cta-glow": "cta-glow 1.8s ease-in-out infinite",
       },
     },
   },

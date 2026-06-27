@@ -33,7 +33,7 @@ export default function GiftProgressBar() {
               </span>
             </div>
             <div className="text-[10px] font-bold uppercase tracking-wider text-terracotta-500">
-              yours free
+              
             </div>
           </div>
         ) : (

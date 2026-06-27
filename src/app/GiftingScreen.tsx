@@ -28,7 +28,7 @@ export default function GiftingScreen({ products }: { products: Product[] }) {
   const popupTotal = useCountUp(giftTotal, showPopup, 900);
 
   return (
-    <div className="pb-8">
+    <div className="pb-28">
       {showPopup && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6 animate-fade-in"
@@ -65,7 +65,7 @@ export default function GiftingScreen({ products }: { products: Product[] }) {
               ₹{popupTotal.toLocaleString("en-IN")}
             </p>
             <p className="relative -mt-0.5 text-[11px] font-bold uppercase tracking-[0.18em] text-sage-700">
-              worth, yours free
+              worth
             </p>
             <p className="relative mt-2 text-xs text-gray-500">
               Buy any product on the next screen to claim them at ₹0.
@@ -122,15 +122,18 @@ export default function GiftingScreen({ products }: { products: Product[] }) {
         </div>
       </section>
 
+
       {gifts.length > 0 && (
-        <section className="px-4 pt-4">
+        <div className="fixed inset-x-0 bottom-4 z-30 mx-auto w-full max-w-[480px] px-4">
           <Link
             href="/redeem"
-            className="flex items-center justify-center gap-1.5 rounded-xl bg-terracotta-500 py-3 text-sm font-semibold text-white shadow transition hover:bg-terracotta-600"
+            className={`flex items-center justify-center gap-1.5 rounded-xl bg-[#1A3C2A] py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-[#152e20] ${
+              gifts.length >= 2 ? "animate-cta-glow" : ""
+            }`}
           >
             Continue to Redeem <ArrowRight size={16} />
           </Link>
-        </section>
+        </div>
       )}
 
       <section className="px-4 pt-5">

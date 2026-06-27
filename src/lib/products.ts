@@ -23,6 +23,9 @@ type ShopifyProductNode = {
       };
     }>;
   };
+  collections: {
+    edges: Array<{ node: { id: string; title: string } }>;
+  };
 };
 
 type ProductsResponse = {
@@ -70,6 +73,30 @@ const PRODUCTS_QUERY = /* GraphQL */ `
               }
             }
           }
+          collections(first: 20) {
+            edges {
+              node {
+                id
+                title
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+const COLLECTIONS_QUERY = /* GraphQL */ `
+  query Collections($first: Int!) {
+    collections(first: $first, sortKey: TITLE) {
+      edges {
+        node {
+          id
+          title
+          image {
+            url
+          }
         }
       }
     }
@@ -102,6 +129,7 @@ function toProduct(node: ShopifyProductNode): Product {
     image: node.featuredImage?.url ?? FALLBACK_IMAGE,
     tags: node.tags,
     category,
+    collections: node.collections.edges.map((e) => e.node.id),
   };
 }
 
@@ -133,4 +161,45 @@ export function deriveCategories(products: Product[]): Category[] {
     seen.set(tag, { id: tag, name: tag, image: p.image });
   }
   return Array.from(seen.values());
+}
+
+type CollectionsResponse = {
+  collections: {
+    edges: Array<{
+      node: { id: string; title: string; image: { url: string } | null };
+    }>;
+  };
+};
+
+/**
+ * Category circles sourced from Shopify Collections. Only collections that
+ * actually contain at least one shop product are returned, each using the
+ * collection's image (falling back to a member product's image).
+ */
+export async function getShopCollections(
+  products: Product[]
+): Promise<Category[]> {
+  const data = await shopifyFetch<CollectionsResponse>({
+    query: COLLECTIONS_QUERY,
+    variables: { first: 50 },
+  });
+
+  // Collection IDs present on the shop products, with a representative image.
+  const presentIds = new Set<string>();
+  const fallbackImage = new Map<string, string>();
+  for (const p of products) {
+    for (const cid of p.collections ?? []) {
+      presentIds.add(cid);
+      if (!fallbackImage.has(cid)) fallbackImage.set(cid, p.image);
+    }
+  }
+
+  return data.collections.edges
+    .map((e) => e.node)
+    .filter((c) => presentIds.has(c.id))
+    .map((c) => ({
+      id: c.id,
+      name: c.title,
+      image: c.image?.url ?? fallbackImage.get(c.id) ?? FALLBACK_IMAGE,
+    }));
 }

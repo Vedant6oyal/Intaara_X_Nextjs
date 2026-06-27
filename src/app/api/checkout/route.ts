@@ -31,6 +31,17 @@ const CART_CREATE = /* GraphQL */ `
   }
 `;
 
+/**
+ * Storefront API cart IDs look like:
+ *   gid://shopify/Cart/<TOKEN>?key=<KEY>
+ * The storefront accepts /cart/c/<TOKEN>?key=<KEY> to load that cart on /cart.
+ */
+function parseCartId(id: string): { token: string; key: string } | null {
+  const match = id.match(/Cart\/([^?]+)\?key=(.+)$/);
+  if (!match) return null;
+  return { token: match[1], key: match[2] };
+}
+
 export async function POST(req: Request) {
   let body: { lines?: IncomingLine[] };
   try {
@@ -39,9 +50,20 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
+  const domain = process.env.SHOPIFY_STORE_DOMAIN?.trim();
+  if (!domain) {
+    return NextResponse.json(
+      { error: "SHOPIFY_STORE_DOMAIN is not set" },
+      { status: 500 }
+    );
+  }
+
   const lines = (body.lines ?? []).filter(
     (l): l is IncomingLine =>
-      !!l && typeof l.variantId === "string" && typeof l.qty === "number" && l.qty > 0
+      !!l &&
+      typeof l.variantId === "string" &&
+      typeof l.qty === "number" &&
+      l.qty > 0
   );
 
   if (lines.length === 0) {
@@ -74,13 +96,25 @@ export async function POST(req: Request) {
       );
     }
 
-    const url = data.cartCreate.cart?.checkoutUrl;
-    if (!url) {
+    const cartId = data.cartCreate.cart?.id;
+    if (!cartId) {
       return NextResponse.json(
-        { error: "Shopify returned no checkout URL" },
+        { error: "Shopify returned no cart" },
         { status: 502 }
       );
     }
+
+    const parsed = parseCartId(cartId);
+    if (!parsed) {
+      return NextResponse.json(
+        { error: "Unrecognised cart id format" },
+        { status: 502 }
+      );
+    }
+
+    // Land the customer on the storefront /cart page with the saved cart
+    // (line attributes, discount codes, etc.) hydrated by Shopify.
+    const url = `https://${domain}/cart/c/${parsed.token}?key=${parsed.key}`;
 
     return NextResponse.json({ url });
   } catch (err) {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Gift, Pencil, ShoppingBag } from "lucide-react";
 import type { Category, Product } from "@/data/products";
@@ -16,20 +16,31 @@ export default function RedeemScreen({
   categories: Category[];
 }) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [headerHidden, setHeaderHidden] = useState(false);
   const { gifts, giftTotal, cartCount, cartTotal, openCart } = useAppStore();
+
+  useEffect(() => {
+    const onScroll = () => setHeaderHidden(window.scrollY > 10);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const filtered = useMemo(
     () =>
       activeCategory
-        ? products.filter((p) => p.category === activeCategory)
+        ? products.filter((p) => p.collections?.includes(activeCategory))
         : products,
     [activeCategory, products]
   );
 
+  const activeCategoryName = activeCategory
+    ? categories.find((c) => c.id === activeCategory)?.name ?? "Products"
+    : "All products";
+
   return (
     <div className="pb-28">
-      <section className="px-4 pt-3">
-        <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-sage-600 to-sage-700 px-3 py-2.5 text-white">
+      <section className={`sticky z-20 px-4 pt-3 transition-all duration-300 ${headerHidden ? "top-0" : "top-14"}`}>
+        <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-sage-600 to-sage-700 px-3 py-2.5 text-white shadow-sm">
           {gifts.length > 0 ? (
             <>
               <div className="flex shrink-0 items-center -space-x-2">
@@ -88,10 +99,11 @@ export default function RedeemScreen({
       </section>
 
       {categories.length > 0 && (
-        <section className="px-4 pt-4">
-          <h2 className="mb-1 text-base font-bold text-gray-800">
-            Shop by category
-          </h2>
+        <section
+          className={`sticky z-20 bg-cream/95 px-4 pt-3 backdrop-blur transition-all duration-300 ${
+            headerHidden ? "top-[72px]" : "top-[128px]"
+          }`}
+        >
           <CategoryStrip
             categories={categories}
             active={activeCategory}
@@ -103,7 +115,7 @@ export default function RedeemScreen({
       <section className="px-4 pt-2">
         <div className="mb-3 flex items-end justify-between">
           <h2 className="text-lg font-bold text-gray-800">
-            {activeCategory ?? "All products"}
+            {activeCategoryName}
           </h2>
           <span className="text-xs text-gray-400">{filtered.length} items</span>
         </div>

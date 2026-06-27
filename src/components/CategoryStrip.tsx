@@ -24,8 +24,8 @@ export default function CategoryStrip({
           key={c.id}
           label={c.name}
           image={c.image}
-          active={active === c.name}
-          onClick={() => onSelect(c.name)}
+          active={active === c.id}
+          onClick={() => onSelect(c.id)}
         />
       ))}
     </div>
