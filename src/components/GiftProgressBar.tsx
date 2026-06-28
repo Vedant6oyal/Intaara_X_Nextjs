@@ -17,7 +17,7 @@ export default function GiftProgressBar() {
   const animatedTotal = useCountUp(giftTotal, giftTotal, 600);
 
   return (
-    <div className="sticky top-0 z-20 border-b border-black/5 bg-cream/95 px-5 py-4 backdrop-blur-md">
+    <div className="sticky top-0 z-20 border-b border-black/5 bg-cream/95 px-5 py-2 backdrop-blur-md">
       {/* Header row: title + total */}
       <div className="mb-3 flex items-end justify-between">
         <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.15em] text-sage-700">

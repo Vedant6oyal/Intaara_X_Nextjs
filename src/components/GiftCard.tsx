@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Check, Plus, Star } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 import type { Product } from "@/data/products";
@@ -9,6 +10,7 @@ export default function GiftCard({ product }: { product: Product }) {
   const selected = isGiftSelected(product.id);
   const disabled = !selected && giftsFull;
   const saved = product.mrp ? product.mrp - product.price : 0;
+  const href = product.handle ? `/product/${product.handle}` : "#";
 
   return (
     <div
@@ -22,7 +24,7 @@ export default function GiftCard({ product }: { product: Product }) {
         </span>
       )}
 
-      <div className="relative aspect-square w-full bg-sage-50">
+      <Link href={href} className="relative block aspect-square w-full bg-sage-50">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={product.image}
@@ -37,12 +39,15 @@ export default function GiftCard({ product }: { product: Product }) {
         <span className="absolute bottom-2 left-2 rounded-md bg-terracotta-500/90 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">
           Free Gift
         </span>
-      </div>
+      </Link>
 
       <div className="flex flex-1 flex-col p-3">
-        <h3 className="line-clamp-2 text-sm font-medium text-gray-800">
+        <Link
+          href={href}
+          className="line-clamp-2 text-sm font-medium text-gray-800 hover:text-sage-700"
+        >
           {product.name}
-        </h3>
+        </Link>
 
         {product.rating && (
           <div className="mt-1 flex items-center gap-1 text-xs text-gray-500">
@@ -52,15 +57,13 @@ export default function GiftCard({ product }: { product: Product }) {
           </div>
         )}
 
-        <div className="mt-1 flex items-baseline gap-2">
-          <span className="rounded-md border border-sage-300 px-1.5 py-0.5 text-sm font-semibold text-sage-700">
-            ₹{product.price}
+        <div className="mt-1.5 flex items-baseline gap-2">
+          <span className=" text-base font-bold tracking-wide text-sage-700">
+            FREE
           </span>
-          {product.mrp && (
-            <span className="text-xs text-gray-400 line-through">
-              ₹{product.mrp}
-            </span>
-          )}
+          <span className="text-lg font-semibold text-gray-800 line-through decoration-[1.5px]">
+            ₹{product.mrp ?? product.price}
+          </span>
         </div>
 
         <button

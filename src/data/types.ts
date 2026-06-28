@@ -3,12 +3,18 @@ export type Product = {
   id: string;
   /** Shopify variant GID — required for cart/checkout. Optional for legacy data. */
   variantId?: string;
+  /** URL-safe Shopify product handle, used to route to the details screen. */
+  handle?: string;
   name: string;
   /** Current selling price in INR (rounded). */
   price: number;
   /** Compare-at / MRP in INR. Only set when greater than `price`. */
   mrp?: number;
   image: string;
+  /** All product images (Shopify), with `image` as the first/featured one. */
+  images?: string[];
+  /** Plain-text product description (Shopify). */
+  description?: string;
   rating?: number;
   ratingCount?: number;
   tag?: string;

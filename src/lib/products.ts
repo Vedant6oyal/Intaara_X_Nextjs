@@ -9,8 +9,12 @@ type ShopifyProductNode = {
   id: string;
   handle: string;
   title: string;
+  description: string;
   tags: string[];
   featuredImage: { url: string; altText: string | null } | null;
+  images: {
+    edges: Array<{ node: { url: string; altText: string | null } }>;
+  };
   priceRange: { minVariantPrice: ShopifyMoney };
   compareAtPriceRange: { minVariantPrice: ShopifyMoney };
   variants: {
@@ -40,10 +44,19 @@ const PRODUCTS_QUERY = /* GraphQL */ `
           id
           handle
           title
+          description
           tags
           featuredImage {
             url
             altText
+          }
+          images(first: 10) {
+            edges {
+              node {
+                url
+                altText
+              }
+            }
           }
           priceRange {
             minVariantPrice {
@@ -120,17 +133,98 @@ function toProduct(node: ShopifyProductNode): Product {
   // First non-"gift" tag becomes the category label (Studs, Hoops, etc.).
   const category = node.tags.find((t) => t.toLowerCase() !== "gift");
 
+  const images = node.images.edges.map((e) => e.node.url);
+  const featured = node.featuredImage?.url ?? images[0] ?? FALLBACK_IMAGE;
+  // Ensure the featured image is first and avoid duplicates.
+  const orderedImages = [featured, ...images.filter((u) => u !== featured)];
+
   return {
     id: node.id,
     variantId: variant?.id,
+    handle: node.handle,
     name: node.title,
+    description: node.description,
     price: Math.round(price),
     mrp: compareAt > price ? Math.round(compareAt) : undefined,
-    image: node.featuredImage?.url ?? FALLBACK_IMAGE,
+    image: featured,
+    images: orderedImages,
     tags: node.tags,
     category,
     collections: node.collections.edges.map((e) => e.node.id),
   };
+}
+
+const PRODUCT_BY_HANDLE_QUERY = /* GraphQL */ `
+  query ProductByHandle($handle: String!) {
+    productByHandle(handle: $handle) {
+      id
+      handle
+      title
+      description
+      tags
+      featuredImage {
+        url
+        altText
+      }
+      images(first: 10) {
+        edges {
+          node {
+            url
+            altText
+          }
+        }
+      }
+      priceRange {
+        minVariantPrice {
+          amount
+          currencyCode
+        }
+      }
+      compareAtPriceRange {
+        minVariantPrice {
+          amount
+          currencyCode
+        }
+      }
+      variants(first: 1) {
+        edges {
+          node {
+            id
+            availableForSale
+            price {
+              amount
+              currencyCode
+            }
+            compareAtPrice {
+              amount
+              currencyCode
+            }
+          }
+        }
+      }
+      collections(first: 20) {
+        edges {
+          node {
+            id
+            title
+          }
+        }
+      }
+    }
+  }
+`;
+
+/** Fetch a single product by its Shopify handle for the details page. */
+export async function getProductByHandle(
+  handle: string
+): Promise<Product | null> {
+  const data = await shopifyFetch<{ productByHandle: ShopifyProductNode | null }>(
+    {
+      query: PRODUCT_BY_HANDLE_QUERY,
+      variables: { handle },
+    }
+  );
+  return data.productByHandle ? toProduct(data.productByHandle) : null;
 }
 
 async function fetchProducts(query: string, first = 50): Promise<Product[]> {

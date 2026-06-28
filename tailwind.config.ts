@@ -62,6 +62,10 @@ const config: Config = {
             opacity: "0",
           },
         },
+        marquee: {
+          "0%": { transform: "translateX(0)" },
+          "100%": { transform: "translateX(-50%)" },
+        },
         "cta-glow": {
           "0%, 100%": {
             transform: "scale(1)",
@@ -84,6 +88,7 @@ const config: Config = {
         "fade-out": "fade-out 0.2s ease-in",
         confetti: "confetti 2.4s ease-in forwards",
         "cta-glow": "cta-glow 1.8s ease-in-out infinite",
+        marquee: "marquee 28s linear infinite",
       },
     },
   },

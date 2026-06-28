@@ -8,6 +8,7 @@ import { useAppStore } from "@/store/AppStore";
 import { useCountUp } from "@/hooks/useCountUp";
 import GiftCard from "@/components/GiftCard";
 import GiftProgressBar from "@/components/GiftProgressBar";
+import HeroCarousel from "@/components/HeroCarousel";
 
 export default function GiftingScreen({ products }: { products: Product[] }) {
   const { gifts, giftTotal, giftsFull, hydrated } = useAppStore();
@@ -90,7 +91,9 @@ export default function GiftingScreen({ products }: { products: Product[] }) {
 
       <GiftProgressBar />
 
-      <section className="px-4 pt-3">
+      <HeroCarousel />
+
+      {/* <section className="px-4 pt-3">
         <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sage-700 via-sage-600 to-sage-800 px-5 py-8 text-center text-white">
           <div className="pointer-events-none absolute inset-0 opacity-20 [background:radial-gradient(circle_at_20%_20%,white,transparent_40%),radial-gradient(circle_at_80%_60%,white,transparent_35%)]" />
           <span className="relative inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider">
@@ -105,14 +108,14 @@ export default function GiftingScreen({ products }: { products: Product[] }) {
             with your purchase.
           </p>
         </div>
-      </section>
+      </section> */}
 
       <section className="px-4 pt-4">
-        <div className="-mt-7 mx-2 flex items-center justify-center gap-2 rounded-xl bg-sage-600 py-2.5 text-sm font-bold text-white shadow-lg">
+        {/* <div className="-mt-7 mx-2 flex items-center justify-center gap-2 rounded-xl bg-sage-600 py-2.5 text-sm font-bold text-white shadow-lg">
           <Sparkles size={16} className="text-amber-300" />
           Free Gifts with every purchase
           <Sparkles size={16} className="text-amber-300" />
-        </div>
+        </div> */}
 
         <div className="mt-4 rounded-2xl bg-sage-50 p-4 text-sm leading-relaxed text-gray-700 ring-1 ring-black/5">
           <Step n={1} text="Pick the free gifts you love 💝" />
