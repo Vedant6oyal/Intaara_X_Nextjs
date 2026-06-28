@@ -120,8 +120,7 @@ export default function GiftingScreen({ products }: { products: Product[] }) {
         <div className="mt-4 rounded-2xl bg-sage-50 p-4 text-sm leading-relaxed text-gray-700 ring-1 ring-black/5">
           <Step n={1} text="Pick the free gifts you love 💝" />
           <Step n={2} text="Add them to your gift box 🎁" />
-          <Step n={3} text="Head to Redeem & choose a product 🛍️" />
-          <Step n={4} text="Checkout — gifts unlock for free ✅" />
+          <Step n={3} text="Get them free on your first purchase 🛍️" />
         </div>
       </section>
 

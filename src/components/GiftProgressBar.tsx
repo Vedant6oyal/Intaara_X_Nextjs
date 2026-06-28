@@ -1,10 +1,12 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Check, Gift, X } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 import { useCountUp } from "@/hooks/useCountUp";
 
 const MAX_SLOTS = 2;
+const SHOW_AFTER_PX = 80;
 
 export default function GiftProgressBar() {
   const { gifts, giftTotal, toggleGift } = useAppStore();
@@ -16,8 +18,24 @@ export default function GiftProgressBar() {
   // Animated total — re-counts whenever the total changes.
   const animatedTotal = useCountUp(giftTotal, giftTotal, 600);
 
+  // Hidden at the top of the page; revealed as the user scrolls.
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > SHOW_AFTER_PX);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <div className="sticky top-0 z-20 border-b border-black/5 bg-cream/95 px-5 py-2 backdrop-blur-md">
+    <div
+      className={`sticky top-0 z-20 overflow-hidden border-b border-black/5 bg-cream/95 px-5 backdrop-blur-md transition-all duration-300 ${
+        visible
+          ? "max-h-32 py-2 opacity-100"
+          : "max-h-0 border-b-0 py-0 opacity-0"
+      }`}
+      aria-hidden={!visible}
+    >
       {/* Header row: title + total */}
       <div className="mb-3 flex items-end justify-between">
         <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.15em] text-sage-700">

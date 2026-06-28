@@ -4,9 +4,7 @@ import { useEffect, useState } from "react";
 
 const SLIDES = [
   "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/free_1000_rs_jewellery(compressed%20by%20quillbot.com).png",
-  "https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=900&q=80&fit=crop",
-  "https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=900&q=80&fit=crop",
-];
+  ];
 
 const AUTOPLAY_MS = 3800;
 

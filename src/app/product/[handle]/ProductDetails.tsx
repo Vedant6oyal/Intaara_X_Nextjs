@@ -61,7 +61,10 @@ export default function ProductDetails({ product }: { product: Product }) {
       <div className="sticky top-0 z-30 flex items-center justify-between border-b border-black/5 bg-white/95 px-3 py-2 backdrop-blur-md">
         <button
           aria-label="Back"
-          onClick={() => router.back()}
+          onClick={() => {
+            if (window.history.length > 1) router.back();
+            else router.push("/");
+          }}
           className="grid h-9 w-9 place-items-center rounded-full bg-sage-50 text-sage-700 hover:bg-sage-100"
         >
           <ArrowLeft size={18} />
@@ -209,9 +212,9 @@ export default function ProductDetails({ product }: { product: Product }) {
 
       {/* Trust badges */}
       <section className="mt-5 grid grid-cols-3 gap-2 px-4">
-        <Badge icon={<Sparkles size={16} />} label="Thick 18k gold plated" />
-        <Badge icon={<Droplets size={16} />} label="Waterproof" />
-        <Badge icon={<ShieldCheck size={16} />} label="Skin safe" />
+        <Badge icon={<img src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Icons/gold_plated_icon.png" alt="" className="h-5 w-5 object-contain" />} label="Thick 18k gold plated" />
+        <Badge icon={<img src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Icons/waterproof_1.png" alt="" className="h-5 w-5 object-contain" />} label="Waterproof" />
+        <Badge icon={<img src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Icons/skin_friendly.png" alt="" className="h-5 w-5 object-contain" />} label="Skin Friendly" />
     <Badge icon={<RotateCcw size={16} />} label="24hr return" />
         <Badge icon={<Banknote size={16} />} label="Cash on delivery" />
         <Badge icon={<Truck size={16} />} label="Free shipping" />
@@ -279,7 +282,16 @@ export default function ProductDetails({ product }: { product: Product }) {
       <div className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-[480px] border-t border-black/5 bg-white/95 px-4 py-3 backdrop-blur-md">
         {isGift ? (
           <button
-            onClick={() => !((!selected && giftsFull)) && toggleGift(product)}
+            onClick={() => {
+              if (!selected && giftsFull) return;
+              toggleGift(product);
+              if (!selected) {
+                setTimeout(() => {
+                  if (window.history.length > 1) router.back();
+                  else router.push("/");
+                }, 400);
+              }
+            }}
             disabled={!selected && giftsFull}
             className={`flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold transition ${
               selected
@@ -346,7 +358,7 @@ export default function ProductDetails({ product }: { product: Product }) {
 function Badge({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
     <div className="flex flex-col items-center gap-1 rounded-xl bg-sage-50 px-2 py-3 text-center ring-1 ring-sage-100">
-      <span className="text-sage-700">{icon}</span>
+      <span>{icon}</span>
       <span className="text-[11px] font-semibold text-gray-700">{label}</span>
     </div>
   );
