@@ -138,7 +138,7 @@ export default function GiftingScreen({ products }: { products: Product[] }) {
         </div>
       )}
 
-      <section className="px-4 pt-5">
+      <section id="pick-gifts" className="px-4 pt-5">
         <div className="mb-3 flex items-end justify-between">
           <h2 className="text-lg font-bold text-gray-800">Pick your free gifts</h2>
           <span className="text-xs text-gray-400">All free with purchase</span>

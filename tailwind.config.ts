@@ -66,6 +66,14 @@ const config: Config = {
           "0%": { transform: "translateX(0)" },
           "100%": { transform: "translateX(-50%)" },
         },
+        wiggle: {
+          "0%, 88%, 100%": { transform: "rotate(0deg)" },
+          "90%": { transform: "rotate(-2deg)" },
+          "92%": { transform: "rotate(2deg)" },
+          "94%": { transform: "rotate(-1.5deg)" },
+          "96%": { transform: "rotate(1.5deg)" },
+          "98%": { transform: "rotate(-1deg)" },
+        },
         "cta-glow": {
           "0%, 100%": {
             transform: "scale(1)",
@@ -89,6 +97,7 @@ const config: Config = {
         confetti: "confetti 2.4s ease-in forwards",
         "cta-glow": "cta-glow 1.8s ease-in-out infinite",
         marquee: "marquee 28s linear infinite",
+        wiggle: "wiggle 4s ease-in-out infinite",
       },
     },
   },

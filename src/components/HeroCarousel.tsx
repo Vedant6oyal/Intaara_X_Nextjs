@@ -20,7 +20,25 @@ export default function HeroCarousel() {
 
   return (
     <section>
-      <div className="relative overflow-hidden bg-sage-50 shadow-sm ring-1 ring-black/5">
+      <div
+        className="relative cursor-pointer overflow-hidden bg-sage-50 shadow-sm ring-1 ring-black/5"
+        onClick={() => {
+          const el = document.getElementById("pick-gifts");
+          if (!el) return;
+          const start = window.scrollY;
+          const end = el.getBoundingClientRect().top + window.scrollY - 10;
+          const duration = 600;
+          const startTime = performance.now();
+          const easeInOut = (t: number) =>
+            t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
+          const step = (now: number) => {
+            const t = Math.min((now - startTime) / duration, 1);
+            window.scrollTo(0, start + (end - start) * easeInOut(t));
+            if (t < 1) requestAnimationFrame(step);
+          };
+          requestAnimationFrame(step);
+        }}
+      >
         <div
           className="flex transition-transform duration-500 ease-out"
           style={{ transform: `translateX(-${index * 100}%)` }}

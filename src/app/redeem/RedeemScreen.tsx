@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Gift, Pencil, ShoppingBag } from "lucide-react";
 import type { Category, Product } from "@/data/products";
@@ -19,11 +19,25 @@ export default function RedeemScreen({
   const [headerHidden, setHeaderHidden] = useState(false);
   const { gifts, giftTotal, cartCount, cartTotal, openCart } = useAppStore();
 
+  // Per-category scroll position preservation.
+  const scrollPositions = useRef<Record<string, number>>({});
+  const switchCategory = (cat: string | null) => {
+    scrollPositions.current[activeCategory ?? "__all"] = window.scrollY;
+    setActiveCategory(cat);
+  };
+
   useEffect(() => {
     const onScroll = () => setHeaderHidden(window.scrollY > 10);
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
+
+  // Restore scroll position when category changes.
+  useEffect(() => {
+    const saved = scrollPositions.current[activeCategory ?? "__all"];
+    if (saved != null) window.scrollTo(0, saved);
+    else window.scrollTo(0, 0);
+  }, [activeCategory]);
 
   const filtered = useMemo(
     () =>
@@ -107,7 +121,7 @@ export default function RedeemScreen({
           <CategoryStrip
             categories={categories}
             active={activeCategory}
-            onSelect={setActiveCategory}
+            onSelect={switchCategory}
           />
         </section>
       )}
@@ -137,16 +151,14 @@ export default function RedeemScreen({
         <div className="fixed inset-x-0 bottom-4 z-30 mx-auto w-full max-w-[480px] px-4">
           <button
             onClick={openCart}
-            className="flex w-full items-center justify-between rounded-2xl bg-terracotta-500 px-4 py-3 text-white shadow-lg transition hover:bg-terracotta-600"
+            className="flex w-full animate-wiggle items-center justify-between rounded-2xl bg-terracotta-500 px-4 py-3 text-white shadow-lg transition hover:bg-terracotta-600"
           >
             <span className="flex items-center gap-2 text-sm font-semibold">
               <ShoppingBag size={18} />
               {cartCount} item{cartCount > 1 ? "s" : ""} · ₹{cartTotal}
             </span>
             <span className="flex items-center gap-1.5 text-sm font-bold">
-              {gifts.length > 0
-                ? `Redeem ${gifts.length} gift${gifts.length > 1 ? "s" : ""}`
-                : "View Cart"}
+              Go to Checkout
               <ArrowRight size={16} />
             </span>
           </button>
