@@ -15,6 +15,10 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 import { useCountUp } from "@/hooks/useCountUp";
+import {
+  SHIPROCKET_COUPON_CODE,
+  toNumericVariantId,
+} from "@/lib/shiprocket";
 
 export default function CartDrawer() {
   const {
@@ -40,43 +44,53 @@ export default function CartDrawer() {
   );
   const savings = mrpTotal - cartTotal;
 
-  async function handleCheckout() {
+  function handleCheckout() {
     setError(null);
 
-    const cartLines = cart
-      .filter((l) => l.product.variantId)
-      .map((l) => ({
-        variantId: l.product.variantId as string,
-        qty: l.qty,
-        isGift: false,
-      }));
+    const products = [
+      ...cart
+        .filter((l) => l.product.variantId)
+        .map((l) => ({
+          variantId: toNumericVariantId(l.product.variantId as string),
+          quantity: l.qty,
+        })),
+      ...gifts
+        .filter((g) => g.variantId)
+        .map((g) => ({
+          variantId: toNumericVariantId(g.variantId as string),
+          quantity: 1,
+        })),
+    ];
 
-    const giftLines = gifts
-      .filter((g) => g.variantId)
-      .map((g) => ({
-        variantId: g.variantId as string,
-        qty: 1,
-        isGift: true,
-      }));
-
-    const lines = [...cartLines, ...giftLines];
-    if (lines.length === 0) {
+    if (products.length === 0) {
       setError("Nothing in your cart to checkout.");
+      return;
+    }
+
+    if (typeof window === "undefined" || !window.shiprocketCheckoutEvents) {
+      setError("Checkout is still loading — please try again in a moment.");
       return;
     }
 
     setLoading(true);
     try {
-      const res = await fetch("/api/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lines }),
+      window.shiprocketCheckoutEvents.buyDirect({
+        type: "cart",
+        products,
+        ...(SHIPROCKET_COUPON_CODE
+          ? { couponCode: SHIPROCKET_COUPON_CODE }
+          : {}),
+        ...(gifts.length > 0
+          ? {
+              cartAttributes: {
+                free_gifts: gifts.map((g) => g.name).join(", "),
+              },
+            }
+          : {}),
       });
-      const data = (await res.json()) as { url?: string; error?: string };
-      if (!res.ok || !data.url) {
-        throw new Error(data.error ?? "Checkout failed");
-      }
-      window.location.href = data.url;
+      // The Shiprocket overlay takes over from here; release the button so it
+      // isn't stuck if the user dismisses the checkout.
+      setTimeout(() => setLoading(false), 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Checkout failed");
       setLoading(false);
