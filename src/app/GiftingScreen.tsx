@@ -93,36 +93,33 @@ export default function GiftingScreen({ products }: { products: Product[] }) {
 
       <HeroCarousel />
 
-      {/* <section className="px-4 pt-3">
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-sage-700 via-sage-600 to-sage-800 px-5 py-8 text-center text-white">
-          <div className="pointer-events-none absolute inset-0 opacity-20 [background:radial-gradient(circle_at_20%_20%,white,transparent_40%),radial-gradient(circle_at_80%_60%,white,transparent_35%)]" />
-          <span className="relative inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider">
-            <Gift size={13} /> Gifting Studio
-          </span>
-          <h2 className="relative mt-3 font-serif text-3xl font-bold leading-tight text-terracotta-400 drop-shadow">
-            Build your
-            <br /> jewellery box
-          </h2>
-          <p className="relative mx-auto mt-2 max-w-[16rem] text-xs text-white/80">
-            Hand-pick anti-tarnish jewellery as free gifts — absolutely free
-            with your purchase.
-          </p>
-        </div>
-      </section> */}
-
       <section className="px-4 pt-4">
-        {/* <div className="-mt-7 mx-2 flex items-center justify-center gap-2 rounded-xl bg-sage-600 py-2.5 text-sm font-bold text-white shadow-lg">
-          <Sparkles size={16} className="text-amber-300" />
-          Free Gifts with every purchase
-          <Sparkles size={16} className="text-amber-300" />
-        </div> */}
-
+      
         <div className="mt-4 rounded-2xl bg-sage-50 p-4 text-sm leading-relaxed text-gray-700 ring-1 ring-black/5">
           <Step n={1} text="Pick the free gifts you love 💝" />
           <Step n={2} text="Add them to your gift box 🎁" />
           <Step n={3} text="Get them free on your first purchase 🛍️" />
         </div>
       </section>
+
+      {/* Slow-moving feature strip */}
+      <div className="overflow-hidden bg-sage-700 py-2">
+        <div className="flex w-max animate-marquee whitespace-nowrap">
+          {Array.from({ length: 2 }).map((_, dup) => (
+            <div key={dup} className="flex shrink-0 items-center">
+              {MARQUEE_ITEMS.map((label, i) => (
+                <span
+                  key={`${dup}-${i}`}
+                  className="px-6 text-[12px] font-semibold uppercase tracking-[0.18em] text-white"
+                >
+                  {label}
+                  <span className="ml-6 text-white/70">·</span>
+                </span>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
 
 
       {gifts.length > 0 && (
@@ -191,3 +188,11 @@ function EmptyState({ message }: { message: string }) {
     </div>
   );
 }
+
+const MARQUEE_ITEMS = [
+  "Gold Plated",
+  "Waterproof",
+  "Skin Safe",
+  "Free Shipping",
+  "24Hr Easy Returns",
+];

@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getProductByHandle } from "@/lib/products";
+import { getProductReviews } from "@/lib/reviews";
 import ProductDetails from "./ProductDetails";
 
 export const revalidate = 60;
@@ -16,5 +17,8 @@ export default async function ProductPage({
     console.error("Failed to load product from Shopify:", err);
   }
   if (!product) notFound();
-  return <ProductDetails product={product} />;
+
+  const reviewSummary = await getProductReviews();
+
+  return <ProductDetails product={product} reviewSummary={reviewSummary} />;
 }

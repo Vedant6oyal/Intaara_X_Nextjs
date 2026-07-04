@@ -22,8 +22,15 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 import type { Product } from "@/data/products";
+import type { Review, ReviewSummary } from "@/lib/reviews";
 
-export default function ProductDetails({ product }: { product: Product }) {
+export default function ProductDetails({
+  product,
+  reviewSummary,
+}: {
+  product: Product;
+  reviewSummary?: ReviewSummary;
+}) {
   const router = useRouter();
   const {
     isGiftSelected,
@@ -48,12 +55,16 @@ export default function ProductDetails({ product }: { product: Product }) {
   const images = product.images?.length ? product.images : [product.image];
   const [activeImg, setActiveImg] = useState(0);
 
-  // Deterministic "reviews" count in [200, 300) derived from product.id so it
-  // stays stable across renders and matches between server and client.
-  const reviewCount =
+  // Prefer real review counts from Supabase; fall back to a deterministic
+  // pseudo-count so the badge is never empty on day one.
+  const fallbackCount =
     200 +
     (Array.from(product.id).reduce((sum, ch) => sum + ch.charCodeAt(0), 0) %
       100);
+  const reviewCount = reviewSummary?.count
+    ? reviewSummary.count
+    : fallbackCount;
+  const averageRating = reviewSummary?.average || 4.9;
 
   return (
     <div className="pb-28">
@@ -275,8 +286,12 @@ export default function ProductDetails({ product }: { product: Product }) {
         </section>
       )}
 
-      {/* Customer reviews (site-wide, dummy data) */}
-      <CustomerReviews />
+      {/* Customer reviews */}
+      <CustomerReviews
+        reviews={reviewSummary?.reviews ?? []}
+        totalCount={reviewCount}
+        average={averageRating}
+      />
 
       {/* Sticky bottom CTA */}
       <div className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-[480px] border-t border-black/5 bg-white/95 px-4 py-3 backdrop-blur-md">
@@ -443,15 +458,72 @@ const DUMMY_REVIEWS = [
   },
 ];
 
-function CustomerReviews() {
+type DisplayReview = {
+  id: string;
+  name: string;
+  date: string;
+  rating: number;
+  title: string | null;
+  body: string;
+  photo: string | null;
+  verified: boolean;
+};
+
+const REVIEWS_PER_PAGE = 5;
+
+function CustomerReviews({
+  reviews,
+  totalCount,
+  average,
+}: {
+  reviews: Review[];
+  totalCount: number;
+  average: number;
+}) {
+  const hasReal = reviews.length > 0;
+  const allDisplay: DisplayReview[] = hasReal
+    ? reviews.map((r) => ({
+        id: r.id,
+        name: r.authorName,
+        date: formatRelative(r.createdAt),
+        rating: r.rating,
+        title: r.title,
+        body: r.body,
+        photo: r.photoUrl,
+        verified: r.verified,
+      }))
+    : DUMMY_REVIEWS.map((r, i) => ({
+        id: `dummy-${i}`,
+        name: r.name,
+        date: r.date,
+        rating: r.rating,
+        title: r.title,
+        body: r.body,
+        photo: r.photo ?? null,
+        verified: true,
+      }));
+
+  const [visibleCount, setVisibleCount] = useState(REVIEWS_PER_PAGE);
+  const display = allDisplay.slice(0, visibleCount);
+  const hasMore = visibleCount < allDisplay.length;
+
+  const photos = allDisplay
+    .map((r) => r.photo)
+    .filter((p): p is string => !!p);
+  const photoStrip = photos.length ? photos : REVIEW_PHOTOS;
+
   return (
     <section className="mt-8 border-t border-gray-200 px-4 pt-6">
       <h2 className="font text-xl font-bold text-gray-900">Customer reviews</h2>
 
       {/* Summary */}
       <div className="mt-3 flex items-center gap-3">
-        <span className="font text-3xl font-bold text-gray-900">4.9</span>
-        <span className="text-sm text-gray-500">2,005 reviews</span>
+        <span className="font text-3xl font-bold text-gray-900">
+          {average.toFixed(1)}
+        </span>
+        <span className="text-sm text-gray-500">
+          {totalCount.toLocaleString("en-IN")} reviews
+        </span>
         <span className="ml-auto inline-flex items-center gap-1 rounded-md bg-sage-100 px-2 py-1 text-xs font-semibold text-sage-700">
           <ShieldCheck size={13} /> Verified
         </span>
@@ -464,17 +536,13 @@ function CustomerReviews() {
 
       {/* Photo strip */}
       <div className="no-scrollbar -mx-4 mt-4 flex gap-2 overflow-x-auto px-4">
-        {REVIEW_PHOTOS.map((src, i) => (
+        {photoStrip.map((src, i) => (
           <div
             key={i}
             className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={src}
-              alt=""
-              className="h-full w-full object-cover"
-            />
+            <img src={src} alt="" className="h-full w-full object-cover" />
           </div>
         ))}
       </div>
@@ -482,15 +550,15 @@ function CustomerReviews() {
       {/* Reviews list header */}
       <div className="mt-6 border-t border-gray-200 pt-4">
         <p className="text-sm font-semibold text-gray-700">
-          Product and store reviews (2,005)
+          Product and store reviews ({totalCount.toLocaleString("en-IN")})
         </p>
       </div>
 
       {/* Individual reviews */}
       <div className="mt-3 space-y-3">
-        {DUMMY_REVIEWS.map((r, i) => (
+        {display.map((r) => (
           <div
-            key={i}
+            key={r.id}
             className="rounded-2xl bg-gray-50 p-4 ring-1 ring-gray-100"
           >
             <div className="flex items-center gap-0.5">
@@ -504,36 +572,56 @@ function CustomerReviews() {
             </div>
             <div className="mt-2 flex items-center gap-2">
               <span className="text-sm font-bold text-gray-900">{r.name}</span>
-              <span className="inline-flex items-center gap-1 rounded-md bg-white px-1.5 py-0.5 text-[10px] font-semibold text-gray-600 ring-1 ring-gray-200">
-                <ShieldCheck size={11} /> Verified
-              </span>
-              <span className="ml-auto text-[11px] text-gray-400">
-                {r.date}
-              </span>
+              {r.verified && (
+                <span className="inline-flex items-center gap-1 rounded-md bg-white px-1.5 py-0.5 text-[10px] font-semibold text-gray-600 ring-1 ring-gray-200">
+                  <ShieldCheck size={11} /> Verified
+                </span>
+              )}
+              <span className="ml-auto text-[11px] text-gray-400">{r.date}</span>
             </div>
-            <p className="mt-2 text-sm font-semibold text-gray-800">
-              {r.title}
-            </p>
+            {r.title && (
+              <p className="mt-2 text-sm font-semibold text-gray-800">
+                {r.title}
+              </p>
+            )}
             <p className="mt-1 text-sm leading-relaxed text-gray-600">
               {r.body}
             </p>
             {r.photo && (
               <div className="mt-3 h-24 w-24 overflow-hidden rounded-lg">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={r.photo}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
+                <img src={r.photo} alt="" className="h-full w-full object-cover" />
               </div>
             )}
           </div>
         ))}
       </div>
 
-      <button className="mt-4 w-full rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50">
-        See all reviews
-      </button>
+      {hasMore && (
+        <button
+          onClick={() => setVisibleCount((c) => c + REVIEWS_PER_PAGE)}
+          className="mt-4 w-full rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+        >
+          More reviews ({allDisplay.length - visibleCount} remaining)
+        </button>
+      )}
     </section>
   );
+}
+
+function formatRelative(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "";
+  const diff = Date.now() - then;
+  const day = 1000 * 60 * 60 * 24;
+  const days = Math.floor(diff / day);
+  if (days < 1) return "today";
+  if (days === 1) return "yesterday";
+  if (days < 7) return `${days} days ago`;
+  const weeks = Math.floor(days / 7);
+  if (weeks < 5) return `${weeks} week${weeks > 1 ? "s" : ""} ago`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months} month${months > 1 ? "s" : ""} ago`;
+  const years = Math.floor(days / 365);
+  return `${years} year${years > 1 ? "s" : ""} ago`;
 }

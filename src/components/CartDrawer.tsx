@@ -16,6 +16,7 @@ import {
 import { useAppStore } from "@/store/AppStore";
 import { useCountUp } from "@/hooks/useCountUp";
 import {
+  SHIPROCKET_50OFF_COUPON,
   SHIPROCKET_COUPON_CODE,
   toNumericVariantId,
 } from "@/lib/shiprocket";
@@ -74,12 +75,14 @@ export default function CartDrawer() {
 
     setLoading(true);
     try {
+      const coupon = cartCount >= 2 && SHIPROCKET_50OFF_COUPON
+        ? SHIPROCKET_50OFF_COUPON
+        : SHIPROCKET_COUPON_CODE;
+
       window.shiprocketCheckoutEvents.buyDirect({
         type: "cart",
         products,
-        ...(SHIPROCKET_COUPON_CODE
-          ? { couponCode: SHIPROCKET_COUPON_CODE }
-          : {}),
+        ...(coupon ? { couponCode: coupon } : {}),
         ...(gifts.length > 0
           ? {
               cartAttributes: {

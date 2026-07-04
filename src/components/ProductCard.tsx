@@ -5,11 +5,15 @@ import { Heart, Star, Minus, Plus } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 import type { Product } from "@/data/products";
 
-export default function ProductCard({ product }: { product: Product }) {
+export default function ProductCard({ product, discountUnlocked = false }: { product: Product; discountUnlocked?: boolean }) {
   const { inCart, addToCart, removeFromCart } = useAppStore();
   const qty = inCart(product.id);
   const saved = product.mrp ? product.mrp - product.price : 0;
   const href = product.handle ? `/product/${product.handle}` : "#";
+
+  const displayPrice = discountUnlocked
+    ? Math.round(product.price * 0.5)
+    : product.price;
 
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-black/5">
@@ -51,13 +55,29 @@ export default function ProductCard({ product }: { product: Product }) {
         )}
 
         <div className="mt-1 flex items-baseline gap-2">
-          <span className="rounded-md border border-sage-300 px-1.5 py-0.5 text-sm font-semibold text-sage-700">
-            ₹{product.price}
-          </span>
-          {product.mrp && (
-            <span className="text-xs text-gray-400 line-through">
-              ₹{product.mrp}
-            </span>
+          {discountUnlocked ? (
+            <div className="flex items-baseline gap-1.5 rounded-md bg-gradient-to-r from-[#fff4c9] to-[#ffe58a] px-1.5 py-0.5 ring-1 ring-[#d4af37]/50 animate-price-flash">
+              <span className="text-[9px] font-black uppercase tracking-wider text-[#1A3C2A]">
+                −50%
+              </span>
+              <span className="text-sm font-bold text-[#1A3C2A]">
+                ₹{displayPrice}
+              </span>
+              <span className="text-[11px] text-gray-500 line-through decoration-red-500/70">
+                ₹{product.price}
+              </span>
+            </div>
+          ) : (
+            <>
+              <span className="rounded-md border border-sage-300 px-1.5 py-0.5 text-sm font-semibold text-sage-700">
+                ₹{product.price}
+              </span>
+              {product.mrp && (
+                <span className="text-xs text-gray-400 line-through">
+                  ₹{product.mrp}
+                </span>
+              )}
+            </>
           )}
         </div>
 

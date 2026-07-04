@@ -74,6 +74,34 @@ const config: Config = {
           "96%": { transform: "rotate(1.5deg)" },
           "98%": { transform: "rotate(-1deg)" },
         },
+        burst: {
+          "0%": {
+            transform: "translate(0, 0) rotate(0deg) scale(1)",
+            opacity: "1",
+          },
+          "70%": { opacity: "1" },
+          "100%": {
+            transform:
+              "translate(var(--tx), var(--ty)) rotate(var(--rot)) scale(0.7)",
+            opacity: "0",
+          },
+        },
+        "shine-sweep": {
+          "0%": { transform: "translateX(-120%) skewX(-20deg)", opacity: "0" },
+          "20%": { opacity: "0.9" },
+          "100%": { transform: "translateX(220%) skewX(-20deg)", opacity: "0" },
+        },
+        "reward-pop": {
+          "0%": { transform: "scale(0.3) rotate(-6deg)", opacity: "0" },
+          "55%": { transform: "scale(1.08) rotate(2deg)", opacity: "1" },
+          "75%": { transform: "scale(0.97) rotate(-1deg)" },
+          "100%": { transform: "scale(1) rotate(0deg)", opacity: "1" },
+        },
+        "price-flash": {
+          "0%": { transform: "scale(1)", boxShadow: "0 0 0 0 rgba(212,175,55,0.7)" },
+          "50%": { transform: "scale(1.06)", boxShadow: "0 0 0 6px rgba(212,175,55,0)" },
+          "100%": { transform: "scale(1)", boxShadow: "0 0 0 0 rgba(212,175,55,0)" },
+        },
         "cta-glow": {
           "0%, 100%": {
             transform: "scale(1)",
@@ -98,6 +126,10 @@ const config: Config = {
         "cta-glow": "cta-glow 1.8s ease-in-out infinite",
         marquee: "marquee 28s linear infinite",
         wiggle: "wiggle 4s ease-in-out infinite",
+        burst: "burst 1.8s cubic-bezier(0.16, 0.84, 0.44, 1) forwards",
+        "shine-sweep": "shine-sweep 1.6s ease-in-out",
+        "reward-pop": "reward-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both",
+        "price-flash": "price-flash 1.4s ease-out",
       },
     },
   },

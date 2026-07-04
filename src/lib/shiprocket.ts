@@ -10,6 +10,10 @@ export const SHIPROCKET_SELLER_DOMAIN =
 export const SHIPROCKET_COUPON_CODE =
   process.env.NEXT_PUBLIC_SHIPROCKET_COUPON_CODE ?? "";
 
+/** Coupon applied when the user has 2+ items in cart (50% off unlock). */
+export const SHIPROCKET_50OFF_COUPON =
+  process.env.NEXT_PUBLIC_SHIPROCKET_50OFF_COUPON ?? "";
+
 /**
  * Shiprocket expects the *numeric* Shopify variant id, while the Storefront
  * API returns a GID like `gid://shopify/ProductVariant/1234567890`. Pull out

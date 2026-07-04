@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 
 const SLIDES = [
-  "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/free_1000_rs_jewellery(compressed%20by%20quillbot.com).png",
+  "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/hero_carousel(compressed%20by%20quillbot.com).png",
+  "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Second_Hero_carousel(compressed%20by%20quillbot.com).png"
   ];
 
 const AUTOPLAY_MS = 3800;
@@ -59,34 +60,6 @@ export default function HeroCarousel() {
         </div>
 
       </div>
-
-      {/* Slow-moving feature strip */}
-      <div className="overflow-hidden bg-sage-500 py-2">
-        <div className="flex w-max animate-marquee whitespace-nowrap">
-          {Array.from({ length: 2 }).map((_, dup) => (
-            <div key={dup} className="flex shrink-0 items-center">
-              {MARQUEE_ITEMS.map((label, i) => (
-                <span
-                  key={`${dup}-${i}`}
-                  className="px-6 text-[12px] font-semibold uppercase tracking-[0.18em] text-white"
-                >
-                  {label}
-                  <span className="ml-6 text-white/70">·</span>
-                </span>
-              ))}
-            </div>
-          ))}
-        </div>
-      </div>
     </section>
   );
 }
-
-const MARQUEE_ITEMS = [
-  "Gold Plated",
-  "Waterproof",
-  "Lifetime Warranty",
-  "Skin Safe",
-  "Free Shipping",
-  "24Hr Easy Returns",
-];

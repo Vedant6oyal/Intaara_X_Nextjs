@@ -2,11 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Gift, Pencil, ShoppingBag } from "lucide-react";
+import { ArrowRight, Crown, Gift, Pencil, ShoppingBag, Sparkles } from "lucide-react";
 import type { Category, Product } from "@/data/products";
 import { useAppStore } from "@/store/AppStore";
 import CategoryStrip from "@/components/CategoryStrip";
 import ProductCard from "@/components/ProductCard";
+import Celebration from "@/components/Celebration";
 
 export default function RedeemScreen({
   products,
@@ -17,7 +18,29 @@ export default function RedeemScreen({
 }) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [headerHidden, setHeaderHidden] = useState(false);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [showRewardPopup, setShowRewardPopup] = useState(false);
   const { gifts, giftTotal, cartCount, cartTotal, openCart } = useAppStore();
+
+  // Detect when the first cart item is added → tease 50% off on their next.
+  // When the second item is added → auto-open the cart for checkout.
+  const prevCartCount = useRef<number>(0);
+  useEffect(() => {
+    if (prevCartCount.current === 0 && cartCount === 1) {
+      setShowConfetti(true);
+      setShowRewardPopup(true);
+      const timer = setTimeout(() => setShowConfetti(false), 4000);
+      prevCartCount.current = cartCount;
+      return () => clearTimeout(timer);
+    }
+    if (prevCartCount.current < 2 && cartCount >= 2) {
+      setShowRewardPopup(false);
+      openCart();
+    }
+    prevCartCount.current = cartCount;
+  }, [cartCount, openCart]);
+
+  const discountUnlocked = cartCount === 1;
 
   // Per-category scroll position preservation.
   const scrollPositions = useRef<Record<string, number>>({});
@@ -53,6 +76,62 @@ export default function RedeemScreen({
 
   return (
     <div className="pb-28">
+      {/* Cannon-style confetti celebration when second product is added */}
+      <Celebration show={showConfetti} />
+
+      {/* 50% OFF unlocked — reward popup */}
+      {showRewardPopup && (
+        <div
+          className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50 px-6 animate-fade-in"
+          onClick={() => setShowRewardPopup(false)}
+        >
+          <div
+            className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-2xl animate-reward-pop"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Gold gradient header with shimmer */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-[#f5d76e] via-[#d4af37] to-[#a8801f] px-6 pb-6 pt-7 text-center">
+              <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                <div className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/70 to-transparent animate-shine-sweep" />
+              </div>
+
+              <div className="relative">
+                <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#1A3C2A] text-[#f5d76e] ring-4 ring-white/70 shadow-lg">
+                  <Crown size={32} className="drop-shadow" />
+                </span>
+                <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.24em] text-[#1A3C2A]/80">
+                  <Sparkles size={12} /> Special Offer <Sparkles size={12} />
+                </p>
+                <h3 className="mt-1 font-cinzel text-3xl font-bold leading-tight text-[#1A3C2A]">
+                  50% OFF
+                </h3>
+                <p className="mt-0.5 text-sm font-bold text-[#1A3C2A]">
+                  on your next item
+                </p>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 pb-6 pt-5 text-center">
+              <p className="text-sm text-gray-600">
+                Add one more item to your cart to get it at{" "}
+                <span className="font-semibold text-[#1A3C2A]">
+                  half price
+                </span>
+                .
+              </p>
+
+              <button
+                onClick={() => setShowRewardPopup(false)}
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#1A3C2A] py-3 text-sm font-bold uppercase tracking-wide text-white shadow-md transition hover:bg-[#152e20]"
+              >
+                Shop Now <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <section className={`sticky z-20 px-4 pt-3 transition-all duration-300 ${headerHidden ? "top-0" : "top-14"}`}>
         <div className="flex items-center gap-3 rounded-2xl bg-gradient-to-r from-sage-600 to-sage-700 px-3 py-2.5 text-white shadow-sm">
           {gifts.length > 0 ? (
@@ -141,7 +220,7 @@ export default function RedeemScreen({
         ) : (
           <div className="grid grid-cols-2 gap-3">
             {filtered.map((p) => (
-              <ProductCard key={p.id} product={p} />
+              <ProductCard key={p.id} product={p} discountUnlocked={discountUnlocked} />
             ))}
           </div>
         )}
@@ -167,3 +246,4 @@ export default function RedeemScreen({
     </div>
   );
 }
+
