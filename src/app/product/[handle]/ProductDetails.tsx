@@ -11,6 +11,7 @@ import {
   Droplets,
   Feather,
   Heart,
+  Loader2,
   Minus,
   Plus,
   RotateCcw,
@@ -504,8 +505,17 @@ function CustomerReviews({
       }));
 
   const [visibleCount, setVisibleCount] = useState(REVIEWS_PER_PAGE);
+  const [loadingMore, setLoadingMore] = useState(false);
   const display = allDisplay.slice(0, visibleCount);
   const hasMore = visibleCount < allDisplay.length;
+
+  const handleMore = () => {
+    setLoadingMore(true);
+    setTimeout(() => {
+      setVisibleCount((c) => c + REVIEWS_PER_PAGE);
+      setLoadingMore(false);
+    }, 1000);
+  };
 
   const photos = allDisplay
     .map((r) => r.photo)
@@ -519,10 +529,10 @@ function CustomerReviews({
       {/* Summary */}
       <div className="mt-3 flex items-center gap-3">
         <span className="font text-3xl font-bold text-gray-900">
-          {average.toFixed(1)}
+          4.9
         </span>
         <span className="text-sm text-gray-500">
-          {totalCount.toLocaleString("en-IN")} reviews
+          500+ reviews
         </span>
         <span className="ml-auto inline-flex items-center gap-1 rounded-md bg-sage-100 px-2 py-1 text-xs font-semibold text-sage-700">
           <ShieldCheck size={13} /> Verified
@@ -599,10 +609,14 @@ function CustomerReviews({
 
       {hasMore && (
         <button
-          onClick={() => setVisibleCount((c) => c + REVIEWS_PER_PAGE)}
-          className="mt-4 w-full rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50"
+          onClick={handleMore}
+          disabled={loadingMore}
+          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
         >
-          More reviews ({allDisplay.length - visibleCount} remaining)
+          {loadingMore ? (
+            <Loader2 size={16} className="animate-spin" />
+          ) : null}
+          {loadingMore ? "Loading…" : "More reviews"}
         </button>
       )}
     </section>
