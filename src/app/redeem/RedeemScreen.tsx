@@ -105,7 +105,7 @@ export default function RedeemScreen({
                 <h3 className="mt-1 font-cinzel text-3xl font-bold leading-tight text-[#1A3C2A]">
                   50% OFF
                 </h3>
-                <p className="mt-0.5 text-sm font-bold text-[#1A3C2A]">
+                <p className="mt-0.5 text-lg font-bold text-[#1A3C2A]">
                   on your next item
                 </p>
               </div>

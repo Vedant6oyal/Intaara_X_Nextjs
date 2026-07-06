@@ -47,6 +47,10 @@ export default function ProductDetails({
   const isGift = product.tags?.some((t) => t.toLowerCase() === "gift") ?? false;
   const selected = isGiftSelected(product.id);
   const qty = inCart(product.id);
+  const discountUnlocked = cartCount === 1 && !isGift;
+  const displayPrice = discountUnlocked
+    ? Math.round(product.price * 0.5)
+    : product.price;
   const saved = product.mrp ? product.mrp - product.price : 0;
   const discountPct =
     product.mrp && product.mrp > product.price
@@ -198,6 +202,20 @@ export default function ProductDetails({
               ₹{(product.mrp ?? product.price).toLocaleString("en-IN")}
             </span>
           </div>
+        ) : discountUnlocked ? (
+          <div className="flex items-baseline gap-3">
+            <div className="flex items-baseline gap-1.5 rounded-lg bg-gradient-to-r from-[#fff4c9] to-[#ffe58a] px-2 py-1 ring-1 ring-[#d4af37]/50 animate-price-flash">
+              <span className="text-[10px] font-black uppercase tracking-wider text-[#1A3C2A]">
+                −50%
+              </span>
+              <span className="font text-3xl font-bold text-[#1A3C2A]">
+                ₹{displayPrice.toLocaleString("en-IN")}
+              </span>
+            </div>
+            <span className="text-lg font-semibold text-gray-400 line-through">
+              ₹{product.price.toLocaleString("en-IN")}
+            </span>
+          </div>
         ) : (
           <div className="flex items-baseline gap-3">
             <span className="font text-3xl font-bold text-gray-900">
@@ -241,9 +259,16 @@ export default function ProductDetails({
               title="Description"
               defaultOpen
             >
-              <p className="whitespace-pre-line text-sm leading-relaxed text-gray-600">
-                {product.description}
-              </p>
+              {/<[a-z][\s\S]*>/i.test(product.description) ? (
+                <div
+                  className="prose prose-sm max-w-none text-sm leading-relaxed text-gray-600 [&_a]:text-sage-700 [&_a]:underline [&_img]:rounded-lg [&_img]:my-2 [&_ul]:list-disc [&_ul]:pl-4 [&_ol]:list-decimal [&_ol]:pl-4 [&_li]:my-0.5 [&_p]:my-2 [&_h1]:text-base [&_h1]:font-bold [&_h2]:text-base [&_h2]:font-bold [&_h3]:text-sm [&_h3]:font-bold [&_strong]:font-semibold [&_br]:block [&_table]:w-full [&_table]:my-2 [&_table]:border-collapse [&_td]:py-1 [&_td]:pr-3 [&_td]:align-top [&_td]:text-sm [&_th]:py-1 [&_th]:pr-3 [&_th]:text-left [&_th]:text-sm [&_th]:font-semibold"
+                  dangerouslySetInnerHTML={{ __html: product.description }}
+                />
+              ) : (
+                <p className="whitespace-pre-line text-sm leading-relaxed text-gray-600">
+                  {product.description}
+                </p>
+              )}
             </Accordion>
           )}
           <Accordion icon={<Star size={16} />} title="Jewellery Care">
@@ -335,7 +360,7 @@ export default function ProductDetails({
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1A3C2A] py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-[#152e20]"
           >
             <ShoppingBag size={18} /> Add to Cart · ₹
-            {product.price.toLocaleString("en-IN")}
+            {displayPrice.toLocaleString("en-IN")}
           </button>
         ) : (
           <div className="flex items-center gap-3">

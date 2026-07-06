@@ -9,7 +9,7 @@ type ShopifyProductNode = {
   id: string;
   handle: string;
   title: string;
-  description: string;
+  descriptionHtml: string;
   tags: string[];
   featuredImage: { url: string; altText: string | null } | null;
   images: {
@@ -44,7 +44,7 @@ const PRODUCTS_QUERY = /* GraphQL */ `
           id
           handle
           title
-          description
+          descriptionHtml
           tags
           featuredImage {
             url
@@ -143,7 +143,7 @@ function toProduct(node: ShopifyProductNode): Product {
     variantId: variant?.id,
     handle: node.handle,
     name: node.title,
-    description: node.description,
+    description: node.descriptionHtml,
     price: Math.round(price),
     mrp: compareAt > price ? Math.round(compareAt) : undefined,
     image: featured,
@@ -160,7 +160,7 @@ const PRODUCT_BY_HANDLE_QUERY = /* GraphQL */ `
       id
       handle
       title
-      description
+      descriptionHtml
       tags
       featuredImage {
         url
