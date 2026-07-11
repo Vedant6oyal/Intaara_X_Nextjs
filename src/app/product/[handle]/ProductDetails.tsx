@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -22,15 +23,14 @@ import {
   Truck,
 } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
+import { useReviews } from "@/hooks/useReviews";
 import type { Product } from "@/data/products";
 import type { Review, ReviewSummary } from "@/lib/reviews";
 
 export default function ProductDetails({
   product,
-  reviewSummary,
 }: {
   product: Product;
-  reviewSummary?: ReviewSummary;
 }) {
   const router = useRouter();
   const {
@@ -43,6 +43,10 @@ export default function ProductDetails({
     openCart,
     cartCount,
   } = useAppStore();
+
+  // Reviews load client-side directly from Supabase (no serverless function).
+  const { data: reviewSummary, loading: reviewsLoading } = useReviews();
+
 
   const isGift = product.tags?.some((t) => t.toLowerCase() === "gift") ?? false;
   const selected = isGiftSelected(product.id);
@@ -104,11 +108,13 @@ export default function ProductDetails({
 
       {/* Image gallery */}
       <div className="relative aspect-square w-full bg-sage-50">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={images[activeImg]}
           alt={product.name}
-          className="h-full w-full object-cover"
+          fill
+          sizes="(max-width: 480px) 100vw, 480px"
+          className="object-cover"
+          priority
         />
 
         {isGift && (
@@ -154,11 +160,12 @@ export default function ProductDetails({
                 i === activeImg ? "ring-sage-700" : "ring-transparent"
               }`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={src}
                 alt=""
-                className="h-full w-full object-cover"
+                fill
+                sizes="64px"
+                className="object-cover"
               />
             </button>
           ))}
@@ -242,9 +249,9 @@ export default function ProductDetails({
 
       {/* Trust badges */}
       <section className="mt-5 grid grid-cols-3 gap-2 px-4">
-        <Badge icon={<img src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Icons/gold_plated_icon.png" alt="" className="h-5 w-5 object-contain" />} label="Thick 18k gold plated" />
-        <Badge icon={<img src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Icons/waterproof_1.png" alt="" className="h-5 w-5 object-contain" />} label="Waterproof" />
-        <Badge icon={<img src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Icons/skin_friendly.png" alt="" className="h-5 w-5 object-contain" />} label="Skin Friendly" />
+        <Badge icon={<img src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Icons/gold_plated_icon.png" alt="" loading="lazy" className="h-5 w-5 object-contain" />} label="Thick 18k gold plated" />
+        <Badge icon={<img src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Icons/waterproof_1.png" alt="" loading="lazy" className="h-5 w-5 object-contain" />} label="Waterproof" />
+        <Badge icon={<img src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Icons/skin_friendly.png" alt="" loading="lazy" className="h-5 w-5 object-contain" />} label="Skin Friendly" />
     <Badge icon={<RotateCcw size={16} />} label="24hr return" />
         <Badge icon={<Banknote size={16} />} label="Cash on delivery" />
         <Badge icon={<Truck size={16} />} label="Free shipping" />
@@ -317,6 +324,7 @@ export default function ProductDetails({
         reviews={reviewSummary?.reviews ?? []}
         totalCount={reviewCount}
         average={averageRating}
+        loading={reviewsLoading}
       />
 
       {/* Sticky bottom CTA */}
@@ -501,10 +509,12 @@ function CustomerReviews({
   reviews,
   totalCount,
   average,
+  loading = false,
 }: {
   reviews: Review[];
   totalCount: number;
   average: number;
+  loading?: boolean;
 }) {
   const hasReal = reviews.length > 0;
   const allDisplay: DisplayReview[] = hasReal
@@ -577,7 +587,7 @@ function CustomerReviews({
             className="relative h-24 w-24 shrink-0 overflow-hidden rounded-lg"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={src} alt="" className="h-full w-full object-cover" />
+            <img src={src} alt="" loading="lazy" className="h-full w-full object-cover" />
           </div>
         ))}
       </div>
@@ -590,59 +600,77 @@ function CustomerReviews({
       </div>
 
       {/* Individual reviews */}
-      <div className="mt-3 space-y-3">
-        {display.map((r) => (
-          <div
-            key={r.id}
-            className="rounded-2xl bg-gray-50 p-4 ring-1 ring-gray-100"
-          >
-            <div className="flex items-center gap-0.5">
-              {Array.from({ length: r.rating }).map((_, j) => (
-                <Star
-                  key={j}
-                  size={14}
-                  className="fill-sage-700 text-sage-700"
-                />
-              ))}
-            </div>
-            <div className="mt-2 flex items-center gap-2">
-              <span className="text-sm font-bold text-gray-900">{r.name}</span>
-              {r.verified && (
-                <span className="inline-flex items-center gap-1 rounded-md bg-white px-1.5 py-0.5 text-[10px] font-semibold text-gray-600 ring-1 ring-gray-200">
-                  <ShieldCheck size={11} /> Verified
-                </span>
-              )}
-              <span className="ml-auto text-[11px] text-gray-400">{r.date}</span>
-            </div>
-            {r.title && (
-              <p className="mt-2 text-sm font-semibold text-gray-800">
-                {r.title}
-              </p>
-            )}
-            <p className="mt-1 text-sm leading-relaxed text-gray-600">
-              {r.body}
-            </p>
-            {r.photo && (
-              <div className="mt-3 h-24 w-24 overflow-hidden rounded-lg">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={r.photo} alt="" className="h-full w-full object-cover" />
+      {loading ? (
+        <div className="mt-6 flex flex-col items-center justify-center gap-3 py-10 text-gray-400">
+          <Loader2 size={28} className="animate-spin text-sage-600" />
+          <span className="text-sm font-medium">Loading reviews…</span>
+        </div>
+      ) : (
+        <>
+          <div className="mt-3 space-y-3">
+            {display.map((r) => (
+              <div
+                key={r.id}
+                className="rounded-2xl bg-gray-50 p-4 ring-1 ring-gray-100"
+              >
+                <div className="flex items-center gap-0.5">
+                  {Array.from({ length: r.rating }).map((_, j) => (
+                    <Star
+                      key={j}
+                      size={14}
+                      className="fill-sage-700 text-sage-700"
+                    />
+                  ))}
+                </div>
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-sm font-bold text-gray-900">
+                    {r.name}
+                  </span>
+                  {r.verified && (
+                    <span className="inline-flex items-center gap-1 rounded-md bg-white px-1.5 py-0.5 text-[10px] font-semibold text-gray-600 ring-1 ring-gray-200">
+                      <ShieldCheck size={11} /> Verified
+                    </span>
+                  )}
+                  <span className="ml-auto text-[11px] text-gray-400">
+                    {r.date}
+                  </span>
+                </div>
+                {r.title && (
+                  <p className="mt-2 text-sm font-semibold text-gray-800">
+                    {r.title}
+                  </p>
+                )}
+                <p className="mt-1 text-sm leading-relaxed text-gray-600">
+                  {r.body}
+                </p>
+                {r.photo && (
+                  <div className="mt-3 h-24 w-24 overflow-hidden rounded-lg">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={r.photo}
+                      alt=""
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                )}
               </div>
-            )}
+            ))}
           </div>
-        ))}
-      </div>
 
-      {hasMore && (
-        <button
-          onClick={handleMore}
-          disabled={loadingMore}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
-        >
-          {loadingMore ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : null}
-          {loadingMore ? "Loading…" : "More reviews"}
-        </button>
+          {hasMore && (
+            <button
+              onClick={handleMore}
+              disabled={loadingMore}
+              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 py-2.5 text-sm font-semibold text-gray-700 transition hover:bg-gray-50 disabled:opacity-60"
+            >
+              {loadingMore ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : null}
+              {loadingMore ? "Loading…" : "More reviews"}
+            </button>
+          )}
+        </>
       )}
     </section>
   );

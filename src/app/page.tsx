@@ -1,7 +1,7 @@
 import { getGiftProducts } from "@/lib/products";
 import GiftingScreen from "./GiftingScreen";
 
-export const revalidate = 60;
+export const revalidate = 3600;
 
 export default async function GiftingPage() {
   let products = [] as Awaited<ReturnType<typeof getGiftProducts>>;

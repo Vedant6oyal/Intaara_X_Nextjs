@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { Check, Gift, X } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 import { useCountUp } from "@/hooks/useCountUp";
@@ -92,11 +93,12 @@ export default function GiftProgressBar() {
                   {reached && product ? (
                     <>
                       <div className="absolute inset-0 overflow-hidden rounded-full">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
+                        <Image
                           src={product.image}
                           alt={product.name}
-                          className="h-full w-full object-cover"
+                          fill
+                          sizes="48px"
+                          className="object-cover"
                         />
                       </div>
                       <span className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full bg-sage-600 text-white ring-2 ring-cream">

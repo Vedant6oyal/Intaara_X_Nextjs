@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   ArrowRight,
@@ -144,12 +145,15 @@ export default function CartDrawer() {
                           key={p.id}
                           className="flex gap-3 rounded-xl bg-gray-50 p-3"
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={p.image}
-                            alt={p.name}
-                            className="h-20 w-20 shrink-0 rounded-lg object-cover"
-                          />
+                          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg">
+                            <Image
+                              src={p.image}
+                              alt={p.name}
+                              fill
+                              sizes="80px"
+                              className="object-cover"
+                            />
+                          </div>
                           <div className="flex flex-1 flex-col">
                             <div className="flex items-start justify-between gap-2">
                               <h3 className="line-clamp-2 text-sm font-semibold text-gray-900">
@@ -225,12 +229,15 @@ export default function CartDrawer() {
                           key={g.id}
                           className="flex items-center gap-3 rounded-xl bg-sage-50 p-3 ring-1 ring-sage-100"
                         >
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={g.image}
-                            alt={g.name}
-                            className="h-12 w-12 shrink-0 rounded-md object-cover"
-                          />
+                          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md">
+                            <Image
+                              src={g.image}
+                              alt={g.name}
+                              fill
+                              sizes="48px"
+                              className="object-cover"
+                            />
+                          </div>
                           <div className="flex-1">
                             <p className="line-clamp-1 text-sm font-medium text-gray-800">
                               {g.name}

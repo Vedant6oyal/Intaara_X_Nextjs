@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import type { Category } from "@/data/products";
 
 export default function CategoryStrip({
@@ -53,10 +54,12 @@ function CategoryItem({
           active ? "ring-sage-600" : "ring-transparent"
         }`}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={image}
           alt={label}
+          width={64}
+          height={64}
+          sizes="64px"
           className="h-full w-full rounded-full object-cover p-0.5"
         />
       </span>

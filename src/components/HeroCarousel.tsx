@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 
 const SLIDES = [
   "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/hero_carousel(compressed%20by%20quillbot.com).png",
@@ -49,11 +50,13 @@ export default function HeroCarousel() {
               key={i}
               className="relative aspect-[8/12] w-full shrink-0"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <Image
                 src={src}
                 alt=""
-                className="h-full w-full object-cover"
+                fill
+                sizes="(max-width: 480px) 100vw, 480px"
+                className="object-cover"
+                priority={i === 0}
               />
             </div>
           ))}

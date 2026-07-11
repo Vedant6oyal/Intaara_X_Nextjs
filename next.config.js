@@ -5,7 +5,9 @@ const nextConfig = {
     remotePatterns: [
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "picsum.photos" },
+      { protocol: "https", hostname: "cdn.shopifycdn.net" },
       { protocol: "https", hostname: "cdn.shopify.com" },
+      { protocol: "https", hostname: "sarvfyflentltumwxzet.supabase.co" },
     ],
   },
 };

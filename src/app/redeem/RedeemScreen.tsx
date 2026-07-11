@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, Crown, Gift, Pencil, ShoppingBag, Sparkles } from "lucide-react";
 import type { Category, Product } from "@/data/products";
 import { useAppStore } from "@/store/AppStore";
@@ -138,14 +139,19 @@ export default function RedeemScreen({
             <>
               <div className="flex shrink-0 items-center -space-x-2">
                 {gifts.slice(0, 4).map((g) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
+                  <div
                     key={g.id}
-                    src={g.image}
-                    alt={g.name}
-                    title={g.name}
-                    className="h-9 w-9 rounded-full object-cover ring-2 ring-sage-700"
-                  />
+                    className="relative h-9 w-9 shrink-0 overflow-hidden rounded-full ring-2 ring-sage-700"
+                  >
+                    <Image
+                      src={g.image}
+                      alt={g.name}
+                      title={g.name}
+                      fill
+                      sizes="36px"
+                      className="object-cover"
+                    />
+                  </div>
                 ))}
                 {gifts.length > 4 && (
                   <span className="grid h-9 w-9 place-items-center rounded-full bg-white/20 text-[11px] font-bold ring-2 ring-sage-700">

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Heart, Star, Minus, Plus } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 import type { Product } from "@/data/products";
@@ -30,11 +31,12 @@ export default function ProductCard({ product, discountUnlocked = false }: { pro
         >
           <Heart size={15} />
         </button>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={product.image}
           alt={product.name}
-          className="h-full w-full object-cover"
+          fill
+          sizes="(max-width: 480px) 50vw, 200px"
+          className="object-cover"
         />
       </Link>
 

@@ -1,11 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Cinzel } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 import { AppStoreProvider } from "@/store/AppStore";
 import Header from "@/components/Header";
 import CartDrawer from "@/components/CartDrawer";
-import { SHIPROCKET_SELLER_DOMAIN } from "@/lib/shiprocket";
+import ShiprocketLoader from "@/components/ShiprocketLoader";
 
 const cinzel = Cinzel({
   subsets: ["latin"],
@@ -38,17 +37,8 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={cinzel.variable} suppressHydrationWarning>
-      <head>
-        {/* Shiprocket (Fastrr) checkout styles */}
-        <link
-          rel="stylesheet"
-          href="https://fastrr-boost-ui.pickrr.com/assets/styles/shopify.css"
-        />
-      </head>
+      <head />
       <body suppressHydrationWarning>
-        {/* Seller domain Shiprocket has the configuration saved under */}
-        <input type="hidden" id="sellerDomain" value={SHIPROCKET_SELLER_DOMAIN} readOnly />
-
         <AppStoreProvider>
           <div className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col bg-cream shadow-xl">
             <Header />
@@ -57,11 +47,7 @@ export default function RootLayout({
           <CartDrawer />
         </AppStoreProvider>
 
-        {/* Shiprocket (Fastrr) checkout initiation script */}
-        <Script
-          src="https://fastrr-boost-ui.pickrr.com/assets/js/channels/shopify.js"
-          strategy="afterInteractive"
-        />
+        <ShiprocketLoader />
       </body>
     </html>
   );

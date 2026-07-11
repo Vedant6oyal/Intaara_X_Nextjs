@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Check, Plus, Star } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 import type { Product } from "@/data/products";
@@ -25,11 +26,12 @@ export default function GiftCard({ product }: { product: Product }) {
       )}
 
       <Link href={href} className="relative block aspect-square w-full bg-sage-50">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <Image
           src={product.image}
           alt={product.name}
-          className="h-full w-full object-cover"
+          fill
+          sizes="(max-width: 480px) 50vw, 200px"
+          className="object-cover"
         />
         {selected && (
           <span className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-full bg-sage-600 text-white shadow animate-pop">

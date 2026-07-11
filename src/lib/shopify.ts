@@ -14,7 +14,7 @@ export type ShopifyFetchOptions = {
 export async function shopifyFetch<T>({
   query,
   variables,
-  revalidate = 60,
+  revalidate = 3600,
 }: ShopifyFetchOptions): Promise<T> {
   if (!domain || !token) {
     throw new Error(
