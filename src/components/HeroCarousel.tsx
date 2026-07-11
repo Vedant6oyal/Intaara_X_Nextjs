@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 
 const SLIDES = [
   "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/hero_carousel(compressed%20by%20quillbot.com).png",
-  "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Second_Hero_carousel(compressed%20by%20quillbot.com).png"
+  "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/hero_Image_2(compressed%20by%20quillbot.com).png"
   ];
 
 const AUTOPLAY_MS = 3800;
