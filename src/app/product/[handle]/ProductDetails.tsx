@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -66,6 +66,7 @@ export default function ProductDetails({
 
   const images = product.images?.length ? product.images : [product.image];
   const [activeImg, setActiveImg] = useState(0);
+  const touchStartX = useRef<number | null>(null);
 
   // Prefer real review counts from Supabase; fall back to a deterministic
   // pseudo-count so the badge is never empty on day one.
@@ -110,7 +111,23 @@ export default function ProductDetails({
       </div>
 
       {/* Image gallery */}
-      <div className="relative aspect-square w-full bg-sage-50">
+      <div
+        className="relative aspect-square w-full overflow-hidden bg-sage-50"
+        onTouchStart={(e) => {
+          touchStartX.current = e.touches[0].clientX;
+        }}
+        onTouchEnd={(e) => {
+          if (touchStartX.current === null) return;
+          const delta = e.changedTouches[0].clientX - touchStartX.current;
+          if (Math.abs(delta) < 40) return;
+          if (delta < 0) {
+            setActiveImg((i) => (i + 1) % images.length);
+          } else {
+            setActiveImg((i) => (i - 1 + images.length) % images.length);
+          }
+          touchStartX.current = null;
+        }}
+      >
         <Image
           src={images[activeImg]}
           alt={product.name}

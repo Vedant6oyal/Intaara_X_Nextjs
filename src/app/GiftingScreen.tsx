@@ -9,6 +9,7 @@ import { useCountUp } from "@/hooks/useCountUp";
 import GiftCard from "@/components/GiftCard";
 import GiftProgressBar from "@/components/GiftProgressBar";
 import HeroCarousel from "@/components/HeroCarousel";
+import Celebration from "@/components/Celebration";
 
 export default function GiftingScreen({ products }: { products: Product[] }) {
   const { gifts, giftTotal, giftsFull, hydrated, gift2Unlocked, unlockGift2 } = useAppStore();
@@ -50,6 +51,8 @@ export default function GiftingScreen({ products }: { products: Product[] }) {
 
   return (
     <div className="pb-28">
+      <Celebration show={showSharePopup} />
+
       {showSharePopup && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6 animate-fade-in"
@@ -62,8 +65,8 @@ export default function GiftingScreen({ products }: { products: Product[] }) {
             <span className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-full bg-sage-100">
               <Gift size={28} className="text-sage-700" />
             </span>
-            <h3 className="font-cinzel text-xl font-bold tracking-wide text-sage-800">
-              You've unlocked a 2nd gift!
+            <h3 className="text-xl font-bold tracking-wide text-sage-800">
+              You've unlocked a 2nd gift 🥳!
             </h3>
             <p className="mt-2 text-sm text-gray-600">
               Share this <span className="font-semibold text-terracotta-500">FREE GIFT INVITE</span> with at least 3 of your friends to claim your second free gift.
