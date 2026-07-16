@@ -2,16 +2,25 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Check, Plus, Star } from "lucide-react";
+import { Check, Plus, Share2, Star } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 import type { Product } from "@/data/products";
 
 export default function GiftCard({ product }: { product: Product }) {
-  const { isGiftSelected, toggleGift, giftsFull } = useAppStore();
+  const { isGiftSelected, toggleGift, giftsFull, gift2Locked, unlockGift2 } = useAppStore();
   const selected = isGiftSelected(product.id);
   const disabled = !selected && giftsFull;
+  const locked = !selected && gift2Locked;
   const saved = product.mrp ? product.mrp - product.price : 0;
   const href = product.handle ? `/product/${product.handle}` : "#";
+
+  function handleShareUnlock() {
+    unlockGift2();
+    const shareText = encodeURIComponent(
+      "Hey! I just unlocked a FREE gift from Intaara 🎁 You can grab yours too! Check it out: https://intaara.com"
+    );
+    window.open(`https://wa.me/?text=${shareText}`, "_blank");
+  }
 
   return (
     <div
@@ -69,13 +78,22 @@ export default function GiftCard({ product }: { product: Product }) {
         </div>
 
         <button
-          onClick={() => !disabled && toggleGift(product)}
+          onClick={() => {
+            if (disabled) return;
+            if (locked) {
+              handleShareUnlock();
+              return;
+            }
+            toggleGift(product);
+          }}
           disabled={disabled}
           className={`mt-3 flex items-center justify-center gap-1.5 rounded-lg py-2 text-sm font-semibold transition ${
             selected
               ? "bg-sage-600 text-white"
               : disabled
               ? "cursor-not-allowed bg-gray-100 text-gray-400"
+              : locked
+              ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
               : "bg-sage-100 text-sage-700 hover:bg-sage-200"
           }`}
         >
@@ -85,6 +103,10 @@ export default function GiftCard({ product }: { product: Product }) {
             </>
           ) : disabled ? (
             "Box is full"
+          ) : locked ? (
+            <>
+              <Share2 size={15} /> Share to Unlock
+            </>
           ) : (
             <>
               <Plus size={16} /> Add Gift

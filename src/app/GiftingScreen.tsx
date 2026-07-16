@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Gift, PartyPopper, RefreshCw, Sparkles } from "lucide-react";
+import { ArrowRight, Gift, PartyPopper, RefreshCw, Share2 } from "lucide-react";
 import Link from "next/link";
 import type { Product } from "@/data/products";
 import { useAppStore } from "@/store/AppStore";
@@ -11,8 +11,9 @@ import GiftProgressBar from "@/components/GiftProgressBar";
 import HeroCarousel from "@/components/HeroCarousel";
 
 export default function GiftingScreen({ products }: { products: Product[] }) {
-  const { gifts, giftTotal, giftsFull, hydrated } = useAppStore();
+  const { gifts, giftTotal, giftsFull, hydrated, gift2Unlocked, unlockGift2 } = useAppStore();
   const [showPopup, setShowPopup] = useState(false);
+  const [showSharePopup, setShowSharePopup] = useState(false);
 
   // Only fire when the box *transitions* from not-full → full after hydration.
   // Prevents re-showing on every page load when the user already has 2 gifts.
@@ -25,11 +26,66 @@ export default function GiftingScreen({ products }: { products: Product[] }) {
     prevFull.current = giftsFull;
   }, [giftsFull, hydrated]);
 
+  // Fire share popup when the first gift is added (and 2nd is still locked).
+  const prevGiftCount = useRef<number | null>(null);
+  useEffect(() => {
+    if (!hydrated) return;
+    if (prevGiftCount.current === 0 && gifts.length === 1 && !gift2Unlocked) {
+      setShowSharePopup(true);
+    }
+    prevGiftCount.current = gifts.length;
+  }, [gifts.length, hydrated, gift2Unlocked]);
+
   // Animated total inside the popup; restarts when popup opens.
   const popupTotal = useCountUp(giftTotal, showPopup, 900);
 
+  function handleWhatsAppShare() {
+    unlockGift2();
+    const shareText = encodeURIComponent(
+      "Hey! I just unlocked a FREE gift from Intaara 🎁 You can grab yours too! Check it out: https://intaara.com"
+    );
+    window.open(`https://wa.me/?text=${shareText}`, "_blank");
+    setShowSharePopup(false);
+  }
+
   return (
     <div className="pb-28">
+      {showSharePopup && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6 animate-fade-in"
+          onClick={() => setShowSharePopup(false)}
+        >
+          <div
+            className="relative w-full max-w-sm animate-pop overflow-hidden rounded-2xl bg-white p-6 text-center shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-full bg-sage-100">
+              <Gift size={28} className="text-sage-700" />
+            </span>
+            <h3 className="font-cinzel text-xl font-bold tracking-wide text-sage-800">
+              You've unlocked a 2nd gift!
+            </h3>
+            <p className="mt-2 text-sm text-gray-600">
+              Share this <span className="font-semibold text-terracotta-500">FREE GIFT INVITE</span> with at least 3 of your friends to claim your second free gift.
+            </p>
+
+            <button
+              onClick={handleWhatsAppShare}
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] py-3 text-sm font-bold text-white shadow-lg transition hover:bg-[#1da851]"
+            >
+              <Share2 size={18} /> Share on WhatsApp
+            </button>
+
+            <button
+              onClick={() => setShowSharePopup(false)}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-sage-100 py-3 text-sm font-semibold text-sage-700 transition hover:bg-sage-200"
+            >
+              Maybe later
+            </button>
+          </div>
+        </div>
+      )}
+
       {showPopup && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6 animate-fade-in"

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Check, Gift, X } from "lucide-react";
+import { Check, Gift, Lock, X } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 import { useCountUp } from "@/hooks/useCountUp";
 
@@ -10,7 +10,7 @@ const MAX_SLOTS = 2;
 const SHOW_AFTER_PX = 80;
 
 export default function GiftProgressBar() {
-  const { gifts, giftTotal, toggleGift } = useAppStore();
+  const { gifts, giftTotal, toggleGift, gift2Locked } = useAppStore();
   const filledCount = Math.min(gifts.length, MAX_SLOTS);
 
   // 0 → 0%, 1 → 50%, 2 → 100% (clamped so stale state can't overflow)
@@ -78,12 +78,15 @@ export default function GiftProgressBar() {
           {Array.from({ length: MAX_SLOTS }).map((_, i) => {
             const reached = filledCount > i;
             const product = gifts[i];
+            const isLockedSlot = i === 1 && gift2Locked;
             return (
               <div key={i} className="flex flex-col items-center gap-1.5">
                 <div
                   className={`relative grid h-12 w-12 place-items-center rounded-full transition ${
                     reached
                       ? "bg-sage-600 text-white shadow-md ring-4 ring-cream animate-pop"
+                      : isLockedSlot
+                      ? "bg-amber-50 text-amber-600 ring-2 ring-dashed ring-amber-300"
                       : "bg-white text-sage-400 ring-2 ring-dashed ring-sage-300"
                   }`}
                   aria-label={
@@ -112,6 +115,8 @@ export default function GiftProgressBar() {
                         <X size={11} strokeWidth={3} />
                       </button>
                     </>
+                  ) : isLockedSlot ? (
+                    <Lock size={16} />
                   ) : (
                     <span className="text-sm font-bold">{i + 1}</span>
                   )}

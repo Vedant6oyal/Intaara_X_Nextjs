@@ -19,6 +19,9 @@ type AppState = {
   gifts: Product[];
   giftTotal: number;
   giftsFull: boolean;
+  gift2Unlocked: boolean;
+  gift2Locked: boolean;
+  unlockGift2: () => void;
   isGiftSelected: (id: string) => boolean;
   toggleGift: (p: Product) => void;
 
@@ -41,6 +44,7 @@ type AppState = {
 type Persisted = {
   gifts: Product[];
   cart: CartLine[];
+  gift2Unlocked?: boolean;
 };
 
 const AppContext = createContext<AppState | null>(null);
@@ -63,6 +67,7 @@ function loadPersisted(): Persisted | null {
 export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   const [gifts, setGifts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartLine[]>([]);
+  const [gift2Unlocked, setGift2Unlocked] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
 
@@ -76,6 +81,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       // Trim any stale state saved when the gift limit was higher.
       setGifts(persisted.gifts.slice(0, MAX_GIFTS));
       setCart(persisted.cart);
+      if (persisted.gift2Unlocked) setGift2Unlocked(true);
     }
     setHydrated(true);
   }, []);
@@ -87,7 +93,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     try {
       window.localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ gifts, cart } satisfies Persisted)
+        JSON.stringify({ gifts, cart, gift2Unlocked } satisfies Persisted)
       );
     } catch {
       // ignore quota / private-mode errors
@@ -105,15 +111,20 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   );
 
   const giftsFull = gifts.length >= MAX_GIFTS;
+  const gift2Locked = gifts.length === 1 && !gift2Unlocked;
+
+  const unlockGift2 = useCallback(() => setGift2Unlocked(true), []);
 
   const toggleGift = useCallback((p: Product) => {
     setGifts((prev) => {
       const exists = prev.some((g) => g.id === p.id);
       if (exists) return prev.filter((g) => g.id !== p.id);
       if (prev.length >= MAX_GIFTS) return prev;
+      // Block adding a 2nd gift until the user shares via WhatsApp.
+      if (prev.length === 1 && !gift2Unlocked) return prev;
       return [...prev, p];
     });
-  }, []);
+  }, [gift2Unlocked]);
 
   const inCart = useCallback(
     (id: string) => cart.find((l) => l.product.id === id)?.qty ?? 0,
@@ -152,6 +163,9 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     gifts,
     giftTotal,
     giftsFull,
+    gift2Unlocked,
+    gift2Locked,
+    unlockGift2,
     cartOpen,
     openCart,
     closeCart,

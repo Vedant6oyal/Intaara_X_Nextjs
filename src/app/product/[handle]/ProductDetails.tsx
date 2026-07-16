@@ -16,6 +16,7 @@ import {
   Minus,
   Plus,
   RotateCcw,
+  Share2,
   ShieldCheck,
   ShoppingBag,
   Sparkles,
@@ -37,6 +38,8 @@ export default function ProductDetails({
     isGiftSelected,
     toggleGift,
     giftsFull,
+    gift2Locked,
+    unlockGift2,
     inCart,
     addToCart,
     removeFromCart,
@@ -333,6 +336,14 @@ export default function ProductDetails({
           <button
             onClick={() => {
               if (!selected && giftsFull) return;
+              if (!selected && gift2Locked) {
+                unlockGift2();
+                const shareText = encodeURIComponent(
+                  "Hey! I just unlocked a FREE gift from Intaara 🎁 You can grab yours too! Check it out: https://intaara.com"
+                );
+                window.open(`https://wa.me/?text=${shareText}`, "_blank");
+                return;
+              }
               toggleGift(product);
               if (!selected) {
                 setTimeout(() => {
@@ -347,6 +358,8 @@ export default function ProductDetails({
                 ? "bg-sage-700 text-white"
                 : !selected && giftsFull
                 ? "cursor-not-allowed bg-gray-100 text-gray-400"
+                : !selected && gift2Locked
+                ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
                 : "bg-[#1A3C2A] text-white shadow-lg hover:bg-[#152e20]"
             }`}
           >
@@ -356,6 +369,10 @@ export default function ProductDetails({
               </>
             ) : giftsFull ? (
               "Gift Box is Full"
+            ) : gift2Locked ? (
+              <>
+                <Share2 size={18} /> Share to Unlock
+              </>
             ) : (
               <>
                 <Plus size={18} /> Add as Free Gift
