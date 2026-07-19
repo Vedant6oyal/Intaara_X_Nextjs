@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Crown, Gift, Pencil, ShoppingBag, Sparkles } from "lucide-react";
+import { ArrowRight, Banknote, Crown, Gift, Pencil, RotateCcw, ShoppingBag, Sparkles, Truck } from "lucide-react";
 import type { Category, Product } from "@/data/products";
 import { useAppStore } from "@/store/AppStore";
 import CategoryStrip from "@/components/CategoryStrip";
@@ -17,10 +17,7 @@ export default function RedeemScreen({
   products: Product[];
   categories: Category[];
 }) {
-  const [activeCategory, setActiveCategory] = useState<string | null>(() => {
-    if (typeof window === "undefined") return null;
-    return window.sessionStorage.getItem("redeem:category") || null;
-  });
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [headerHidden, setHeaderHidden] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showRewardPopup, setShowRewardPopup] = useState(false);
@@ -53,9 +50,20 @@ export default function RedeemScreen({
     setActiveCategory(cat);
   };
 
-  // Persist the active category so it survives navigation to a product page.
+  // Restore the saved category after mount (not during render, to avoid a
+  // hydration mismatch between server and client).
+  const categoryRestored = useRef(false);
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    const saved = window.sessionStorage.getItem("redeem:category");
+    if (saved) setActiveCategory(saved);
+    categoryRestored.current = true;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Persist the active category so it survives navigation to a product page.
+  // Skip until the restore above has run, so we don't wipe the saved value.
+  useEffect(() => {
+    if (typeof window === "undefined" || !categoryRestored.current) return;
     if (activeCategory) window.sessionStorage.setItem("redeem:category", activeCategory);
     else window.sessionStorage.removeItem("redeem:category");
   }, [activeCategory]);
@@ -226,6 +234,8 @@ export default function RedeemScreen({
         </div>
       </section>
 
+      
+
       {categories.length > 0 && (
         <section
           className={`sticky z-20 bg-cream/95 px-4 pt-3 backdrop-blur transition-all duration-300 ${
@@ -239,6 +249,28 @@ export default function RedeemScreen({
           />
         </section>
       )}
+      {/* Slow-moving feature strip */}
+      <div className="overflow-hidden bg-sage-700 py-2">
+        <div className="flex w-max animate-marquee whitespace-nowrap">
+          {Array.from({ length: 2 }).map((_, dup) => (
+            <div key={dup} className="flex shrink-0 items-center">
+              {MARQUEE_ITEMS.map((item, i) => {
+                const Icon = item.icon;
+                return (
+                  <span
+                    key={`${dup}-${i}`}
+                    className="flex items-center gap-1.5 px-6 text-[12px] font-semibold uppercase tracking-[0.18em] text-white"
+                  >
+                    <Icon size={13} />
+                    {item.label}
+                    <span className="ml-6 text-white/70">·</span>
+                  </span>
+                );
+              })}
+            </div>
+          ))}
+        </div>
+      </div>
 
       <section className="px-4 pt-2">
         <div className="mb-3 flex items-end justify-between">
@@ -282,3 +314,8 @@ export default function RedeemScreen({
   );
 }
 
+const MARQUEE_ITEMS = [
+  { label: "Free Shipping", icon: Truck },
+  { label: "COD available", icon: Banknote },
+  { label: "Easy Returns", icon: RotateCcw },
+];
