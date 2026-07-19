@@ -8,7 +8,7 @@ export const revalidate = 3600;
 // with zero serverless function invocations. ISR revalidates every hour.
 export async function generateStaticParams() {
   try {
-    const products = await getShopProducts();
+    const { products } = await getShopProducts();
     return products.map((p) => ({ handle: p.handle }));
   } catch {
     return [];

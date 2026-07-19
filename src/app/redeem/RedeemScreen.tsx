@@ -17,7 +17,10 @@ export default function RedeemScreen({
   products: Product[];
   categories: Category[];
 }) {
-  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [activeCategory, setActiveCategory] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    return window.sessionStorage.getItem("redeem:category") || null;
+  });
   const [headerHidden, setHeaderHidden] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showRewardPopup, setShowRewardPopup] = useState(false);
@@ -50,14 +53,40 @@ export default function RedeemScreen({
     setActiveCategory(cat);
   };
 
+  // Persist the active category so it survives navigation to a product page.
   useEffect(() => {
-    const onScroll = () => setHeaderHidden(window.scrollY > 10);
+    if (typeof window === "undefined") return;
+    if (activeCategory) window.sessionStorage.setItem("redeem:category", activeCategory);
+    else window.sessionStorage.removeItem("redeem:category");
+  }, [activeCategory]);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setHeaderHidden(window.scrollY > 10);
+      // Persist scroll position so back-navigation lands in the same spot.
+      window.sessionStorage.setItem("redeem:scroll", String(window.scrollY));
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Restore scroll position when category changes.
+  // On first mount, restore the scroll position saved before navigating away.
   useEffect(() => {
+    const saved = window.sessionStorage.getItem("redeem:scroll");
+    if (saved != null) {
+      requestAnimationFrame(() => window.scrollTo(0, parseInt(saved, 10)));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Restore scroll position when switching categories in-session. Skip the
+  // very first render so it doesn't clobber the sessionStorage restore above.
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     const saved = scrollPositions.current[activeCategory ?? "__all"];
     if (saved != null) window.scrollTo(0, saved);
     else window.scrollTo(0, 0);

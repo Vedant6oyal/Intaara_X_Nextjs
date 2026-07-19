@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
 const SLIDES = [
@@ -13,6 +13,7 @@ const AUTOPLAY_MS = 3800;
 
 export default function HeroCarousel() {
   const [index, setIndex] = useState(0);
+  const touchStartX = useRef<number | null>(null);
 
   useEffect(() => {
     const id = setInterval(() => {
@@ -25,6 +26,20 @@ export default function HeroCarousel() {
     <section>
       <div
         className="relative cursor-pointer overflow-hidden bg-sage-50 shadow-sm ring-1 ring-black/5"
+        onTouchStart={(e) => {
+          touchStartX.current = e.touches[0].clientX;
+        }}
+        onTouchEnd={(e) => {
+          if (touchStartX.current === null) return;
+          const delta = e.changedTouches[0].clientX - touchStartX.current;
+          if (Math.abs(delta) < 40) return;
+          if (delta < 0) {
+            setIndex((i) => (i + 1) % SLIDES.length);
+          } else {
+            setIndex((i) => (i - 1 + SLIDES.length) % SLIDES.length);
+          }
+          touchStartX.current = null;
+        }}
         onClick={() => {
           const el = document.getElementById("pick-gifts");
           if (!el) return;

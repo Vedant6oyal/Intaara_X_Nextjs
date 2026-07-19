@@ -51,7 +51,7 @@ export default function ProductDetails({
   const { data: reviewSummary, loading: reviewsLoading } = useReviews();
 
 
-  const isGift = product.tags?.some((t) => t.toLowerCase() === "gift") ?? false;
+  const isGift = !product.tags?.some((t) => t.toLowerCase() === "non-gift");
   const selected = isGiftSelected(product.id);
   const qty = inCart(product.id);
   const discountUnlocked = cartCount === 1 && !isGift;
@@ -269,7 +269,7 @@ export default function ProductDetails({
 
       {/* Trust badges */}
       <section className="mt-5 grid grid-cols-3 gap-2 px-4">
-        <Badge icon={<img src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Icons/gold_plated_icon.png" alt="" loading="lazy" className="h-5 w-5 object-contain" />} label="Thick 18k gold plated" />
+        <Badge icon={<img src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Icons/gold_plated_icon.png" alt="" loading="lazy" className="h-5 w-5 object-contain" />} label="18k gold plated" />
         <Badge icon={<img src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Icons/waterproof_1.png" alt="" loading="lazy" className="h-5 w-5 object-contain" />} label="Waterproof" />
         <Badge icon={<img src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Icons/skin_friendly.png" alt="" loading="lazy" className="h-5 w-5 object-contain" />} label="Skin Friendly" />
     <Badge icon={<RotateCcw size={16} />} label="24hr return" />

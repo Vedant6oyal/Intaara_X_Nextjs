@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { ArrowRight, Gift, PartyPopper, RefreshCw, Share2 } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { ArrowRight, Gift, Loader2, PartyPopper, RefreshCw, Share2, Sparkles } from "lucide-react";
 import Link from "next/link";
 import type { Product } from "@/data/products";
 import { useAppStore } from "@/store/AppStore";
@@ -11,10 +11,43 @@ import GiftProgressBar from "@/components/GiftProgressBar";
 import HeroCarousel from "@/components/HeroCarousel";
 import Celebration from "@/components/Celebration";
 
-export default function GiftingScreen({ products }: { products: Product[] }) {
+export default function GiftingScreen({
+  products: initialProducts,
+  hasNextPage: initialHasNextPage,
+  endCursor: initialEndCursor,
+}: {
+  products: Product[];
+  hasNextPage: boolean;
+  endCursor: string | null;
+}) {
   const { gifts, giftTotal, giftsFull, hydrated, gift2Unlocked, unlockGift2 } = useAppStore();
   const [showPopup, setShowPopup] = useState(false);
   const [showSharePopup, setShowSharePopup] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  // Infinite scroll state
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [hasNextPage, setHasNextPage] = useState(initialHasNextPage);
+  const [cursor, setCursor] = useState<string | null>(initialEndCursor);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // First-visit welcome popup — shows once, then never again.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const seen = window.localStorage.getItem("giftbox-app:welcomeSeen");
+    if (!seen) {
+      const timer = setTimeout(() => setShowWelcome(true), 800);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  function handleWelcomeDismiss() {
+    window.localStorage.setItem("giftbox-app:welcomeSeen", "1");
+    setShowWelcome(false);
+    const el = document.getElementById("pick-gifts");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
   // Only fire when the box *transitions* from not-full → full after hydration.
   // Prevents re-showing on every page load when the user already has 2 gifts.
@@ -49,9 +82,73 @@ export default function GiftingScreen({ products }: { products: Product[] }) {
     setShowSharePopup(false);
   }
 
+  // Infinite scroll: load more products when sentinel enters viewport.
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasNextPage || !cursor) return;
+    setLoadingMore(true);
+    try {
+      const res = await fetch(`/api/gift-products?after=${encodeURIComponent(cursor)}`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setProducts((prev) => [...prev, ...data.products]);
+      setHasNextPage(data.hasNextPage);
+      setCursor(data.endCursor);
+    } catch {
+      // silently fail — user can scroll again to retry
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, hasNextPage, cursor]);
+
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) loadMore();
+      },
+      { rootMargin: "300px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [loadMore]);
+
   return (
     <div className="pb-28">
       <Celebration show={showSharePopup} />
+
+      {showWelcome && (
+        <div className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50 px-6 animate-fade-in">
+          <div className="relative w-full max-w-sm animate-pop overflow-hidden rounded-2xl bg-white p-6 text-center shadow-2xl">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sage-500 via-terracotta-400 to-sage-500" />
+            <div className="mb-4 flex items-center justify-center">
+              <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-sage-100 text-3xl">
+                💌
+              </span>
+            </div>
+
+            <div className="mb-1 flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-terracotta-500">
+              <Sparkles size={12} /> Invite Only <Sparkles size={12} />
+            </div>
+
+            <h3 className="text-xl font-bold tracking-wide text-sage-800">
+              Invite Only First Customer Offer 
+            </h3>
+            <p className="mt-2 text-sm leading-relaxed text-gray-600">
+              As one of our first customers, pick a{" "}
+              <span className="font-semibold text-sage-700">FREE gift !</span>{" "}
+             
+            </p>
+
+            <button
+              onClick={handleWelcomeDismiss}
+              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-terracotta-500 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-terracotta-600"
+            >
+              Choose My Free Gift <ArrowRight size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {showSharePopup && (
         <div
@@ -200,13 +297,25 @@ export default function GiftingScreen({ products }: { products: Product[] }) {
           <span className="text-xs text-gray-400">All free with purchase</span>
         </div>
         {products.length === 0 ? (
-          <EmptyState message="No free gifts available right now. Tag some Shopify products with `gift` to populate this screen." />
+          <EmptyState message="No free gifts available right now. Remove the `non-gift` tag from Shopify products to populate this screen." />
         ) : (
-          <div className="grid grid-cols-2 gap-3">
-            {products.map((p) => (
-              <GiftCard key={p.id} product={p} />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 gap-3">
+              {products.map((p) => (
+                <GiftCard key={p.id} product={p} />
+              ))}
+            </div>
+            {hasNextPage && (
+              <div
+                ref={sentinelRef}
+                className="flex items-center justify-center py-6"
+              >
+                {loadingMore && (
+                  <Loader2 size={20} className="animate-spin text-sage-400" />
+                )}
+              </div>
+            )}
+          </>
         )}
       </section>
     </div>

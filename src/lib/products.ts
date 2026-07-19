@@ -33,12 +33,15 @@ type ShopifyProductNode = {
 };
 
 type ProductsResponse = {
-  products: { edges: Array<{ node: ShopifyProductNode }> };
+  products: {
+    edges: Array<{ node: ShopifyProductNode; cursor: string }>;
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
+  };
 };
 
 const PRODUCTS_QUERY = /* GraphQL */ `
-  query Products($first: Int!, $query: String) {
-    products(first: $first, query: $query) {
+  query Products($first: Int!, $query: String, $after: String) {
+    products(first: $first, query: $query, after: $after) {
       edges {
         node {
           id
@@ -95,6 +98,11 @@ const PRODUCTS_QUERY = /* GraphQL */ `
             }
           }
         }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
       }
     }
   }
@@ -130,8 +138,8 @@ function toProduct(node: ShopifyProductNode): Product {
       0
   );
 
-  // First non-"gift" tag becomes the category label (Studs, Hoops, etc.).
-  const category = node.tags.find((t) => t.toLowerCase() !== "gift");
+  // First non-"non-gift" tag becomes the category label (Studs, Hoops, etc.).
+  const category = node.tags.find((t) => t.toLowerCase() !== "non-gift");
 
   const images = node.images.edges.map((e) => e.node.url);
   const featured = node.featuredImage?.url ?? images[0] ?? FALLBACK_IMAGE;
@@ -227,25 +235,46 @@ export async function getProductByHandle(
   return data.productByHandle ? toProduct(data.productByHandle) : null;
 }
 
-async function fetchProducts(query: string, first = 50): Promise<Product[]> {
+export type ProductPage = {
+  products: Product[];
+  hasNextPage: boolean;
+  endCursor: string | null;
+};
+
+async function fetchProducts(
+  query: string,
+  first = 50,
+  after?: string | null
+): Promise<ProductPage> {
   const data = await shopifyFetch<ProductsResponse>({
     query: PRODUCTS_QUERY,
-    variables: { first, query },
+    variables: { first, query, after: after ?? null },
   });
-  return data.products.edges.map((e) => toProduct(e.node));
+  return {
+    products: data.products.edges.map((e) => toProduct(e.node)),
+    hasNextPage: data.products.pageInfo.hasNextPage,
+    endCursor: data.products.pageInfo.endCursor,
+  };
 }
 
-/** Free-gift screen: products tagged `gift` in Shopify. */
-export async function getGiftProducts(): Promise<Product[]> {
-  return fetchProducts("tag:gift", 50);
+/** Free-gift screen: all products NOT tagged `non-gift` in Shopify. */
+export async function getGiftProducts(): Promise<ProductPage> {
+  return fetchProducts("-tag:non-gift", 24);
 }
 
-/** Redeem & Shop screen: everything that isn't tagged `gift`. */
-export async function getShopProducts(): Promise<Product[]> {
-  return fetchProducts("-tag:gift", 100);
+/** Load more gift products by cursor. */
+export async function getGiftProductsAfter(
+  after: string
+): Promise<ProductPage> {
+  return fetchProducts("-tag:non-gift", 24, after);
 }
 
-/** Derive category circles from the unique non-"gift" tags on shop products. */
+/** Redeem & Shop screen: all products in Shopify. */
+export async function getShopProducts(): Promise<ProductPage> {
+  return fetchProducts("", 100);
+}
+
+/** Derive category circles from the unique non-"non-gift" tags on shop products. */
 export function deriveCategories(products: Product[]): Category[] {
   const seen = new Map<string, Category>();
   for (const p of products) {
