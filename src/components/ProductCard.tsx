@@ -10,7 +10,7 @@ export default function ProductCard({ product, discountUnlocked = false }: { pro
   const { inCart, addToCart, removeFromCart } = useAppStore();
   const qty = inCart(product.id);
   const saved = product.mrp ? product.mrp - product.price : 0;
-  const href = product.handle ? `/product/${product.handle}` : "#";
+  const href = product.handle ? `/product/${product.handle}?from=redeem` : "#";
 
   const displayPrice = discountUnlocked
     ? Math.round(product.price * 0.5)

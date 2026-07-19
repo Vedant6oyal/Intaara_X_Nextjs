@@ -83,11 +83,17 @@ export default function GiftingScreen({
   }
 
   // Infinite scroll: load more products when sentinel enters viewport.
+  // Use a ref to hold the latest pagination state so the IntersectionObserver
+  // stays stable (created once) instead of being recreated on every state change.
+  const stateRef = useRef({ loadingMore, hasNextPage, cursor });
+  stateRef.current = { loadingMore, hasNextPage, cursor };
+
   const loadMore = useCallback(async () => {
-    if (loadingMore || !hasNextPage || !cursor) return;
+    const { loadingMore: lm, hasNextPage: hnp, cursor: c } = stateRef.current;
+    if (lm || !hnp || !c) return;
     setLoadingMore(true);
     try {
-      const res = await fetch(`/api/gift-products?after=${encodeURIComponent(cursor)}`);
+      const res = await fetch(`/api/gift-products?after=${encodeURIComponent(c)}`);
       if (!res.ok) return;
       const data = await res.json();
       setProducts((prev) => [...prev, ...data.products]);
@@ -98,7 +104,7 @@ export default function GiftingScreen({
     } finally {
       setLoadingMore(false);
     }
-  }, [loadingMore, hasNextPage, cursor]);
+  }, []);
 
   useEffect(() => {
     const el = sentinelRef.current;

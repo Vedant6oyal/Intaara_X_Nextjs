@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getProductByHandle, getShopProducts } from "@/lib/products";
 import ProductDetails from "./ProductDetails";
@@ -29,5 +30,9 @@ export default async function ProductPage({
 
   if (!product) notFound();
 
-  return <ProductDetails product={product} />;
+  return (
+    <Suspense>
+      <ProductDetails product={product} />
+    </Suspense>
+  );
 }

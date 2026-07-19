@@ -21,7 +21,7 @@ export default function RedeemScreen({
   const [headerHidden, setHeaderHidden] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showRewardPopup, setShowRewardPopup] = useState(false);
-  const { gifts, giftTotal, cartCount, cartTotal, openCart } = useAppStore();
+  const { gifts, giftTotal, cart, cartCount, cartTotal, openCart } = useAppStore();
 
   // Detect when the first cart item is added → tease 50% off on their next.
   // When the second item is added → auto-open the cart for checkout.
@@ -42,6 +42,10 @@ export default function RedeemScreen({
   }, [cartCount, openCart]);
 
   const discountUnlocked = cartCount === 1;
+
+  // 50% off on the second distinct product (1 unit only).
+  const discountAmount = cart.length >= 2 ? Math.round(cart[1].product.price * 0.5) : 0;
+  const displayTotal = cartTotal - discountAmount;
 
   // Per-category scroll position preservation.
   const scrollPositions = useRef<Record<string, number>>({});
@@ -251,7 +255,7 @@ export default function RedeemScreen({
       )}
       {/* Slow-moving feature strip */}
       <div className="overflow-hidden bg-sage-700 py-2">
-        <div className="flex w-max animate-marquee whitespace-nowrap">
+        <div className="flex w-max animate-marquee-fast whitespace-nowrap">
           {Array.from({ length: 2 }).map((_, dup) => (
             <div key={dup} className="flex shrink-0 items-center">
               {MARQUEE_ITEMS.map((item, i) => {
@@ -259,11 +263,11 @@ export default function RedeemScreen({
                 return (
                   <span
                     key={`${dup}-${i}`}
-                    className="flex items-center gap-1.5 px-6 text-[12px] font-semibold uppercase tracking-[0.18em] text-white"
+                    className="flex items-center gap-1.5 px-4 text-[12px] font-semibold uppercase tracking-[0.18em] text-white"
                   >
                     <Icon size={13} />
                     {item.label}
-                    <span className="ml-6 text-white/70">·</span>
+                    <span className="ml-4 text-white/70">·</span>
                   </span>
                 );
               })}
@@ -301,7 +305,7 @@ export default function RedeemScreen({
           >
             <span className="flex items-center gap-2 text-sm font-semibold">
               <ShoppingBag size={18} />
-              {cartCount} item{cartCount > 1 ? "s" : ""} · ₹{cartTotal}
+              {cartCount} item{cartCount > 1 ? "s" : ""} · ₹{displayTotal}
             </span>
             <span className="flex items-center gap-1.5 text-sm font-bold">
               Go to Checkout

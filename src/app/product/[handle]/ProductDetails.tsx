@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
   Banknote,
@@ -34,6 +34,8 @@ export default function ProductDetails({
   product: Product;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromRedeem = searchParams.get("from") === "redeem";
   const {
     isGiftSelected,
     toggleGift,
@@ -51,7 +53,7 @@ export default function ProductDetails({
   const { data: reviewSummary, loading: reviewsLoading } = useReviews();
 
 
-  const isGift = !product.tags?.some((t) => t.toLowerCase() === "non-gift");
+  const isGift = !fromRedeem && !product.tags?.some((t) => t.toLowerCase() === "non-gift");
   const selected = isGiftSelected(product.id);
   const qty = inCart(product.id);
   const discountUnlocked = cartCount === 1 && !isGift;

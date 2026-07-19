@@ -40,11 +40,16 @@ export default function CartDrawer() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // 50% off on the second distinct product (1 unit only).
+  const discountAmount =
+    cart.length >= 2 ? Math.round(cart[1].product.price * 0.5) : 0;
+  const discountedTotal = cartTotal - discountAmount;
+
   const mrpTotal = cart.reduce(
     (s, l) => s + (l.product.mrp ?? l.product.price) * l.qty,
     0
   );
-  const savings = mrpTotal - cartTotal;
+  const savings = mrpTotal - cartTotal + discountAmount;
 
   function handleCheckout() {
     setError(null);
@@ -137,9 +142,13 @@ export default function CartDrawer() {
               <>
                 {cart.length > 0 && (
                   <ul className="flex flex-col gap-3">
-                    {cart.map((line) => {
+                    {cart.map((line, idx) => {
                       const p = line.product;
                       const saved = p.mrp ? p.mrp - p.price : 0;
+                      const isHalfOff = idx === 1 && discountAmount > 0;
+                      const lineTotal = isHalfOff
+                        ? p.price * line.qty - discountAmount
+                        : p.price * line.qty;
                       return (
                         <li
                           key={p.id}
@@ -172,18 +181,34 @@ export default function CartDrawer() {
                             </div>
 
                             <div className="mt-1 flex items-baseline gap-2">
-                              <span className="text-sm font-bold text-gray-900">
-                                ₹{p.price}
-                              </span>
-                              {p.mrp && p.mrp > p.price && (
-                                <span className="text-xs text-gray-400 line-through">
-                                  ₹{p.mrp}
-                                </span>
-                              )}
-                              {saved > 0 && (
-                                <span className="rounded bg-sage-100 px-1.5 py-0.5 text-[10px] font-semibold text-sage-700">
-                                  Save ₹{saved}
-                                </span>
+                              {isHalfOff ? (
+                                <>
+                                  <span className="text-sm font-bold text-gray-900">
+                                    ₹{Math.round(p.price * 0.5)}
+                                  </span>
+                                  <span className="text-xs text-gray-400 line-through">
+                                    ₹{p.price}
+                                  </span>
+                                  <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
+                                    50% OFF
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="text-sm font-bold text-gray-900">
+                                    ₹{p.price}
+                                  </span>
+                                  {p.mrp && p.mrp > p.price && (
+                                    <span className="text-xs text-gray-400 line-through">
+                                      ₹{p.mrp}
+                                    </span>
+                                  )}
+                                  {saved > 0 && (
+                                    <span className="rounded bg-sage-100 px-1.5 py-0.5 text-[10px] font-semibold text-sage-700">
+                                      Save ₹{saved}
+                                    </span>
+                                  )}
+                                </>
                               )}
                             </div>
 
@@ -208,7 +233,7 @@ export default function CartDrawer() {
                                 </button>
                               </div>
                               <span className="text-sm font-bold text-gray-900">
-                                ₹{p.price * line.qty}
+                                ₹{lineTotal}
                               </span>
                             </div>
                           </div>
@@ -281,9 +306,9 @@ export default function CartDrawer() {
                   )}
                   <div className="mt-1 flex items-baseline gap-2">
                     <span className="text-xl font-bold text-gray-900">
-                      ₹{cartTotal}
+                      ₹{discountedTotal}
                     </span>
-                    {mrpTotal > cartTotal && (
+                    {mrpTotal > discountedTotal && (
                       <span className="text-sm text-gray-400 line-through">
                         ₹{mrpTotal}
                       </span>
