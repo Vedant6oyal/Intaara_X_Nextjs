@@ -16,7 +16,7 @@ export default function CategoryStrip({
     <div className="no-scrollbar -mx-4 flex gap-4 overflow-x-auto px-4 py-2">
       <CategoryItem
         label="All"
-        image="https://picsum.photos/seed/cat-all/200/200"
+        image="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/All_Jewellery_category_3.png"
         active={active === null}
         onClick={() => onSelect(null)}
       />

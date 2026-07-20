@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, ShoppingBag, Gift } from "lucide-react";
+import { Menu, ShoppingBag, Gift, X, Truck, RotateCcw, ShieldCheck, FileText, Home, Sparkles } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 
 export default function Header({ title = "INTAARA" }: { title?: string }) {
@@ -13,6 +14,7 @@ export default function Header({ title = "INTAARA" }: { title?: string }) {
   const shouldHideOnScroll = isGiftScreen || isRedeemScreen;
 
   const [hidden, setHidden] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const lastScrollY = useRef(0);
 
   useEffect(() => {
@@ -29,47 +31,125 @@ export default function Header({ title = "INTAARA" }: { title?: string }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, [shouldHideOnScroll]);
 
+  const menuLinks = [
+    { href: "/", label: "Pick Free Gift", icon: Sparkles },
+    { href: "/redeem", label: "Shop", icon: Home },
+  ];
+
+  const policyLinks = [
+    { href: "/policies/shipping", label: "Shipping Policy", icon: Truck },
+    { href: "/policies/returns", label: "Returns & Exchange", icon: RotateCcw },
+    { href: "/policies/privacy", label: "Privacy Policy", icon: ShieldCheck },
+    { href: "/policies/terms", label: "Terms of Service", icon: FileText },
+  ];
+
   return (
-    <header
-      className={`sticky top-0 z-30 bg-sage-700/95 backdrop-blur border-b border-white/10 transition-transform duration-300 ${
-        hidden ? "-translate-y-full" : "translate-y-0"
-      }`}
-    >
-      <div className="flex items-center justify-between px-4 py-2">
-        <button aria-label="Menu" className="text-cream/90 transition hover:text-white">
-          <Menu size={24} />
-        </button>
-
-        <img
-          src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Intaara_logo_text_gold.avif"
-          alt={title}
-          className="h-10 w-auto object-contain"
-        />
-
-        <div className="flex items-center gap-3 text-cream/90">
-          <div className="relative">
-            <Gift size={22} />
-            {gifts.length > 0 && (
-              <span className="absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full bg-terracotta-500 text-[10px] font-bold text-white ring-2 ring-sage-700">
-                {gifts.length}
-              </span>
-            )}
-          </div>
+    <>
+      <header
+        className={`sticky top-0 z-30 bg-sage-700/95 backdrop-blur border-b border-white/10 transition-transform duration-300 ${
+          hidden ? "-translate-y-full" : "translate-y-0"
+        }`}
+      >
+        <div className="flex items-center justify-between px-4 py-2">
           <button
-            type="button"
-            aria-label="Open cart"
-            onClick={openCart}
-            className="relative transition hover:text-white"
+            aria-label="Menu"
+            onClick={() => setMenuOpen(true)}
+            className="text-cream/90 transition hover:text-white"
           >
-            <ShoppingBag size={22} />
-            {cartCount > 0 && (
-              <span className="absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full bg-[#d4af37] text-[10px] font-bold text-sage-900 ring-2 ring-sage-700">
-                {cartCount}
-              </span>
-            )}
+            <Menu size={24} />
           </button>
+
+          <img
+            src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Intaara_logo_text_gold.avif"
+            alt={title}
+            className="h-10 w-auto object-contain"
+          />
+
+          <div className="flex items-center gap-3 text-cream/90">
+            <Link href="/" aria-label="Pick free gifts" className="relative transition hover:text-white">
+              <Gift size={22} />
+              {gifts.length > 0 && (
+                <span className="absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full bg-terracotta-500 text-[10px] font-bold text-white ring-2 ring-sage-700">
+                  {gifts.length}
+                </span>
+              )}
+            </Link>
+            <button
+              type="button"
+              aria-label="Open cart"
+              onClick={openCart}
+              className="relative transition hover:text-white"
+            >
+              <ShoppingBag size={22} />
+              {cartCount > 0 && (
+                <span className="absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full bg-[#d4af37] text-[10px] font-bold text-sage-900 ring-2 ring-sage-700">
+                  {cartCount}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Hamburger menu drawer */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-50">
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm animate-fade-in"
+            onClick={() => setMenuOpen(false)}
+          />
+          <div className="absolute inset-y-0 left-0 w-72 max-w-[80vw] bg-white shadow-2xl animate-slide-in">
+            <div className="flex items-center justify-between border-b border-black/5 px-5 py-4">
+              <span className="font-cinzel text-lg font-bold text-gray-900">Menu</span>
+              <button
+                aria-label="Close menu"
+                onClick={() => setMenuOpen(false)}
+                className="grid h-8 w-8 place-items-center rounded-full text-gray-500 transition hover:bg-gray-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="flex flex-col px-3 py-4">
+              {menuLinks.map((link) => {
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMenuOpen(false)}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition ${
+                      pathname === link.href
+                        ? "bg-sage-50 text-sage-700"
+                        : "text-gray-700 hover:bg-gray-50"
+                    }`}
+                  >
+                    <Icon size={18} />
+                    {link.label}
+                  </Link>
+                );
+              })}
+
+              <div className="my-3 border-t border-black/5" />
+
+              {policyLinks.map((link) => {
+                const Icon = link.icon;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMenuOpen(false)}
+                    className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-600 transition hover:bg-gray-50"
+                  >
+                    <Icon size={18} />
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
