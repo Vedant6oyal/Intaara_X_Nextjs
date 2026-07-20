@@ -24,14 +24,15 @@ export default function RedeemScreen({
   const [showGiftClaimPopup, setShowGiftClaimPopup] = useState(false);
   const { gifts, giftTotal, cart, cartCount, cartTotal, openCart } = useAppStore();
 
-  // Show gift-claim popup once when entering the redeem screen (if gifts are selected).
+  // Show gift-claim popup once when entering the redeem screen (if gifts are selected
+  // and the user hasn't already added a product to their cart).
   const claimPopupShown = useRef(false);
   useEffect(() => {
-    if (!claimPopupShown.current && gifts.length > 0) {
+    if (!claimPopupShown.current && gifts.length > 0 && cartCount === 0) {
       setShowGiftClaimPopup(true);
       claimPopupShown.current = true;
     }
-  }, [gifts.length]);
+  }, [gifts.length, cartCount]);
 
   // Detect when the first cart item is added → tease 50% off on their next.
   // When the second item is added → auto-open the cart for checkout.
