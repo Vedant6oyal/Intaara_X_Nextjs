@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import Image from "next/image";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
@@ -141,6 +142,27 @@ export default function CartDrawer() {
               <EmptyState onClose={closeCart} />
             ) : (
               <>
+                {cart.length === 0 && gifts.length > 0 && (
+                  <Link
+                    href="/redeem"
+                    onClick={closeCart}
+                    className="mb-4 flex items-center gap-3 rounded-xl border border-dashed border-terracotta-300 bg-terracotta-50 px-4 py-3 transition hover:bg-terracotta-100"
+                  >
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-terracotta-500 text-white">
+                      <ShoppingBag size={18} />
+                    </span>
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-terracotta-800">
+                        One last step!
+                      </p>
+                      <p className="text-xs text-terracotta-600">
+                        Purchase any product to claim your gifts at ₹0
+                      </p>
+                    </div>
+                    <ArrowRight size={18} className="shrink-0 text-terracotta-500" />
+                  </Link>
+                )}
+
                 {cart.length > 0 && (
                   <ul className="flex flex-col gap-3">
                     {cart.map((line, idx) => {
