@@ -21,7 +21,17 @@ export default function RedeemScreen({
   const [headerHidden, setHeaderHidden] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
   const [showRewardPopup, setShowRewardPopup] = useState(false);
+  const [showGiftClaimPopup, setShowGiftClaimPopup] = useState(false);
   const { gifts, giftTotal, cart, cartCount, cartTotal, openCart } = useAppStore();
+
+  // Show gift-claim popup once when entering the redeem screen (if gifts are selected).
+  const claimPopupShown = useRef(false);
+  useEffect(() => {
+    if (!claimPopupShown.current && gifts.length > 0) {
+      setShowGiftClaimPopup(true);
+      claimPopupShown.current = true;
+    }
+  }, [gifts.length]);
 
   // Detect when the first cart item is added → tease 50% off on their next.
   // When the second item is added → auto-open the cart for checkout.
@@ -120,6 +130,57 @@ export default function RedeemScreen({
     <div className="pb-28">
       {/* Cannon-style confetti celebration when second product is added */}
       <Celebration show={showConfetti} />
+
+      {/* Gift claim popup — shown on entry when gifts are selected */}
+      {showGiftClaimPopup && (
+        <div
+          className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50 px-6 animate-fade-in"
+          onClick={() => setShowGiftClaimPopup(false)}
+        >
+          <div
+            className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-2xl animate-reward-pop"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Sage gradient header */}
+            <div className="relative overflow-hidden bg-gradient-to-br from-sage-700 to-sage-700 px-6 pb-6 pt-7 text-center">
+              <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                <div className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shine-sweep" />
+              </div>
+
+              <div className="relative">
+                <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-white/20 text-white ring-4 ring-white/40 shadow-lg">
+                  <Gift size={32} className="drop-shadow" />
+                </span>
+                <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.24em] text-white/80">
+                   Your Giftbox is Ready 
+                </p>
+                <h3 className="mt-1 font-cinzel text-2xl font-bold leading-tight text-white">
+                  ₹{giftTotal.toLocaleString("en-IN")} FREE
+                </h3>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 pb-6 pt-5 text-center">
+              <p className="text-sm text-gray-600">
+                Purchase any item from this page and your selected gifts worth{" "}
+                <span className="font-semibold text-sage-700">
+                  ₹{giftTotal.toLocaleString("en-IN")}
+                </span>{" "}
+                will be added to your order —{" "}
+                <span className="font-bold text-sage-700">absolutely free</span>.
+              </p>
+
+              <button
+                onClick={() => setShowGiftClaimPopup(false)}
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-sage-700 py-3 text-sm font-bold uppercase tracking-wide text-white shadow-md transition hover:bg-sage-800"
+              >
+                Start Shopping <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 50% OFF unlocked — reward popup */}
       {showRewardPopup && (

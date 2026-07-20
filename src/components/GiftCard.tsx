@@ -6,20 +6,18 @@ import { Check, Plus, Share2, Star } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 import type { Product } from "@/data/products";
 
-export default function GiftCard({ product }: { product: Product }) {
-  const { isGiftSelected, toggleGift, giftsFull, gift2Locked, unlockGift2 } = useAppStore();
+export default function GiftCard({ product, onLockedClick }: { product: Product; onLockedClick?: () => void }) {
+  const { isGiftSelected, toggleGift, giftsFull, gift2Locked } = useAppStore();
   const selected = isGiftSelected(product.id);
   const disabled = !selected && giftsFull;
   const locked = !selected && gift2Locked;
   const saved = product.mrp ? product.mrp - product.price : 0;
   const href = product.handle ? `/product/${product.handle}` : "#";
 
-  function handleShareUnlock() {
-    unlockGift2();
-    const shareText = encodeURIComponent(
-      "Hey! I just unlocked a FREE gift from Intaara 🎁 You can grab yours too! Check it out: https://intaara.com"
-    );
-    window.open(`https://wa.me/?text=${shareText}`, "_blank");
+  function handleLockedClick() {
+    if (onLockedClick) {
+      onLockedClick();
+    }
   }
 
   return (
@@ -81,7 +79,7 @@ export default function GiftCard({ product }: { product: Product }) {
           onClick={() => {
             if (disabled) return;
             if (locked) {
-              handleShareUnlock();
+              handleLockedClick();
               return;
             }
             toggleGift(product);

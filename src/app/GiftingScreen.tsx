@@ -24,6 +24,7 @@ export default function GiftingScreen({
   const [showPopup, setShowPopup] = useState(false);
   const [showSharePopup, setShowSharePopup] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
+  const [showUnlockedPopup, setShowUnlockedPopup] = useState(false);
 
   // Infinite scroll state
   const [products, setProducts] = useState<Product[]>(initialProducts);
@@ -70,15 +71,34 @@ export default function GiftingScreen({
     prevGiftCount.current = gifts.length;
   }, [gifts.length, hydrated, gift2Unlocked]);
 
+  // Detect when gift2 gets unlocked (e.g. user returns from WhatsApp share).
+  // Show a confetti popup celebrating the unlock — delayed 1s so the user
+  // has time to settle back into the app before the celebration fires.
+  const prevUnlocked = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (!hydrated) return;
+    if (prevUnlocked.current === false && gift2Unlocked) {
+      const timer = setTimeout(() => setShowUnlockedPopup(true), 1000);
+      return () => clearTimeout(timer);
+    }
+    prevUnlocked.current = gift2Unlocked;
+  }, [gift2Unlocked, hydrated]);
+
   // Animated total inside the popup; restarts when popup opens.
   const popupTotal = useCountUp(giftTotal, showPopup, 900);
 
   function handleWhatsAppShare() {
     unlockGift2();
     const shareText = encodeURIComponent(
-      "Hey! I just unlocked a FREE gift from Intaara 🎁 You can grab yours too! Check it out: https://intaara.com"
+      "Hey! I am sharing with you an exclusive upto ₹1000 gift invite link from Intaara. Pick your favourite jewellery gift, I have already selected mine. \nCheck it out : https://intaara.in/$ExclusiveFriendinvite"
     );
-    window.open(`https://wa.me/?text=${shareText}`, "_blank");
+    const a = document.createElement("a");
+    a.href = `https://wa.me/?text=${shareText}`;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     setShowSharePopup(false);
   }
 
@@ -121,7 +141,7 @@ export default function GiftingScreen({
 
   return (
     <div className="pb-28">
-      <Celebration show={showSharePopup} />
+      <Celebration show={showSharePopup || showUnlockedPopup} />
 
       {showWelcome && (
         <div className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50 px-6 animate-fade-in">
@@ -129,7 +149,7 @@ export default function GiftingScreen({
             <div className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sage-500 via-terracotta-400 to-sage-500" />
             <div className="mb-4 flex items-center justify-center">
               <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-sage-100 text-3xl">
-                💌
+                🥳
               </span>
             </div>
 
@@ -137,13 +157,12 @@ export default function GiftingScreen({
               <Sparkles size={12} /> Invite Only <Sparkles size={12} />
             </div>
 
-            <h3 className="text-xl font-bold tracking-wide text-sage-800">
-              Invite Only First Customer Offer 
+            <h3 className="text-lg font-bold tracking-wide text-sage-800">
+              INVITE ONLY COUPON APPLIED
             </h3>
             <p className="mt-2 text-sm leading-relaxed text-gray-600">
-              As one of our first customers, pick a{" "}
-              <span className="font-semibold text-sage-700">FREE gift !</span>{" "}
-             
+              Invite only coupon for first customer is applied. Please pick a{" "}
+              <span className="font-semibold text-sage-700">free gift.</span>{" "}
             </p>
 
             <button
@@ -151,6 +170,35 @@ export default function GiftingScreen({
               className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-terracotta-500 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-terracotta-600"
             >
               Choose My Free Gift <ArrowRight size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {showUnlockedPopup && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6 animate-fade-in"
+          onClick={() => setShowUnlockedPopup(false)}
+        >
+          <div
+            className="relative w-full max-w-sm animate-pop overflow-hidden rounded-2xl bg-white p-6 text-center shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <span className="relative mx-auto mb-3 grid h-14 w-14 place-items-center rounded-full bg-sage-100">
+              <Gift size={28} className="text-sage-700" />
+            </span>
+            <h3 className="relative text-xl font-bold tracking-wide text-sage-800">
+              2nd Gift Unlocked! 🎉
+            </h3>
+            <p className="relative mt-2 text-sm text-gray-600">
+              Your second free gift is now available. Pick one from the collection below!
+            </p>
+
+            <button
+              onClick={() => setShowUnlockedPopup(false)}
+              className="relative mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-sage-700 py-3 text-sm font-bold text-white shadow-md transition hover:bg-sage-800"
+            >
+              Pick My 2nd Gift <ArrowRight size={16} />
             </button>
           </div>
         </div>
@@ -172,7 +220,7 @@ export default function GiftingScreen({
               You've unlocked a 2nd gift 🥳!
             </h3>
             <p className="mt-2 text-sm text-gray-600">
-              Share this <span className="font-semibold text-terracotta-500">FREE GIFT INVITE</span> with at least 3 of your friends to claim your second free gift.
+              Share this <span className="font-semibold text-terracotta-500">FREE GIFT INVITE</span> with at least <span className="font-semibold text-terracotta-500"> 3 of your friends </span> to claim your second free gift.
             </p>
 
             <button
@@ -308,7 +356,7 @@ export default function GiftingScreen({
           <>
             <div className="grid grid-cols-2 gap-3">
               {products.map((p) => (
-                <GiftCard key={p.id} product={p} />
+                <GiftCard key={p.id} product={p} onLockedClick={() => setShowSharePopup(true)} />
               ))}
             </div>
             {hasNextPage && (
