@@ -274,6 +274,20 @@ export async function getShopProducts(): Promise<ProductPage> {
   return fetchProducts("", 100);
 }
 
+/** Redeem & Shop screen: ALL products, paginating through every page. */
+export async function getAllShopProducts(): Promise<Product[]> {
+  const all: Product[] = [];
+  let cursor: string | null = null;
+  let hasNext = true;
+  while (hasNext) {
+    const page = await fetchProducts("", 250, cursor);
+    all.push(...page.products);
+    hasNext = page.hasNextPage;
+    cursor = page.endCursor;
+  }
+  return all;
+}
+
 /** Derive category circles from the unique non-"non-gift" tags on shop products. */
 export function deriveCategories(products: Product[]): Category[] {
   const seen = new Map<string, Category>();

@@ -1,4 +1,4 @@
-import { getShopCollections, getShopProducts } from "@/lib/products";
+import { getAllShopProducts, getShopCollections } from "@/lib/products";
 import type { Category, Product } from "@/data/products";
 import RedeemScreen from "./RedeemScreen";
 
@@ -8,8 +8,7 @@ export default async function RedeemPage() {
   let products: Product[] = [];
   let categories: Category[] = [];
   try {
-    const page = await getShopProducts();
-    products = page.products;
+    products = await getAllShopProducts();
     categories = await getShopCollections(products);
   } catch (err) {
     console.error("Failed to load shop data from Shopify:", err);

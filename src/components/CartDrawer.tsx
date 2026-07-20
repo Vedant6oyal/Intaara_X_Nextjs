@@ -49,7 +49,8 @@ export default function CartDrawer() {
     (s, l) => s + (l.product.mrp ?? l.product.price) * l.qty,
     0
   );
-  const savings = mrpTotal - cartTotal + discountAmount;
+  const savings = mrpTotal - cartTotal + discountAmount + giftTotal;
+  const totalMrp = mrpTotal + giftTotal;
 
   function handleCheckout() {
     setError(null);
@@ -245,8 +246,16 @@ export default function CartDrawer() {
 
                 {gifts.length > 0 && (
                   <div className="mt-5">
-                    <div className="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-sage-700">
-                      <Gift size={14} /> Free gifts ({gifts.length})
+                    <div className="mb-2 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-sage-700">
+                      🎁 Free gifts ({gifts.length})
+                      <span className="ml-auto flex items-baseline gap-1.5">
+                        <span className="text-sm font-bold line-through">
+                          ₹{giftTotal}
+                        </span>
+                        <span className="text-[11px] font-semibold uppercase tracking-wide text-sage-700">
+                          FREE
+                        </span>
+                      </span>
                     </div>
                     <ul className="flex flex-col gap-2">
                       {gifts.map((g) => (
@@ -267,9 +276,14 @@ export default function CartDrawer() {
                             <p className="line-clamp-1 text-sm font-medium text-gray-800">
                               {g.name}
                             </p>
-                            <p className="text-[11px] font-semibold uppercase tracking-wide text-sage-700">
-                              Free
-                            </p>
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="text-sm font-bold line-through">
+                                ₹{g.price}
+                              </span>
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-sage-700">
+                                Free
+                              </p>
+                            </div>
                           </div>
                           <button
                             aria-label={`Remove ${g.name}`}
@@ -308,9 +322,9 @@ export default function CartDrawer() {
                     <span className="text-xl font-bold text-gray-900">
                       ₹{discountedTotal}
                     </span>
-                    {mrpTotal > discountedTotal && (
+                    {totalMrp > discountedTotal && (
                       <span className="text-sm text-gray-400 line-through">
-                        ₹{mrpTotal}
+                        ₹{totalMrp}
                       </span>
                     )}
                   </div>
