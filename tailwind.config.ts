@@ -126,6 +126,7 @@ const config: Config = {
         "cta-glow": "cta-glow 1.8s ease-in-out infinite",
         marquee: "marquee 28s linear infinite",
         "marquee-fast": "marquee 5s linear infinite",
+        "marquee-medium": "marquee 12s linear infinite",
         wiggle: "wiggle 4s ease-in-out infinite",
         burst: "burst 1.8s cubic-bezier(0.16, 0.84, 0.44, 1) forwards",
         "shine-sweep": "shine-sweep 1.6s ease-in-out",

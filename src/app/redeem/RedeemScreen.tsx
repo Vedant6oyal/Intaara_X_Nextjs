@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, Banknote, Crown, Gift, Pencil, RotateCcw, ShoppingBag, Sparkles, Truck } from "lucide-react";
@@ -8,6 +8,7 @@ import type { Category, Product } from "@/data/products";
 import { useAppStore } from "@/store/AppStore";
 import CategoryStrip from "@/components/CategoryStrip";
 import ProductCard from "@/components/ProductCard";
+import FeatureMarquee from "@/components/FeatureMarquee";
 import Celebration from "@/components/Celebration";
 
 export default function RedeemScreen({
@@ -352,8 +353,15 @@ export default function RedeemScreen({
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-3">
-            {filtered.map((p) => (
-              <ProductCard key={p.id} product={p} discountUnlocked={discountUnlocked} />
+            {filtered.map((p, i) => (
+              <Fragment key={p.id}>
+                <ProductCard product={p} discountUnlocked={discountUnlocked} />
+                {(i + 1) % 4 === 0 && i < filtered.length - 1 && (
+                  <div className="col-span-2 -mx-4 my-1">
+                    <FeatureMarquee />
+                  </div>
+                )}
+              </Fragment>
             ))}
           </div>
         )}

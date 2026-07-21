@@ -360,11 +360,14 @@ export default function ProductDetails({
                 const shareText = encodeURIComponent(
                   "Hey! I just unlocked a FREE gift from Intaara 🎁 You can grab yours too! Check it out: https://intaara.com"
                 );
-                window.open(`https://wa.me/?text=${shareText}`, "_blank");
+                window.open(`https://api.whatsapp.com/send?text=${shareText}`, "_blank");
                 return;
               }
               toggleGift(product);
               if (!selected) {
+                if (typeof window !== "undefined") {
+                  window.sessionStorage.setItem("gift:showSharePopup", "1");
+                }
                 setTimeout(() => {
                   if (window.history.length > 1) router.back();
                   else router.push("/");

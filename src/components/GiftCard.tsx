@@ -71,7 +71,7 @@ export default function GiftCard({ product, onLockedClick }: { product: Product;
             FREE
           </span>
           <span className="text-lg font-semibold text-gray-800 line-through decoration-[1.5px]">
-            ₹{product.mrp ?? product.price}
+            ₹{product.price}
           </span>
         </div>
 

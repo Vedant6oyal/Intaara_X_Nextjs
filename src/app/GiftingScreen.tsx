@@ -1,12 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, Gift, Loader2, PartyPopper, RefreshCw, Share2, Sparkles } from "lucide-react";
 import Link from "next/link";
 import type { Product } from "@/data/products";
 import { useAppStore } from "@/store/AppStore";
 import { useCountUp } from "@/hooks/useCountUp";
 import GiftCard from "@/components/GiftCard";
+import FeatureMarquee from "@/components/FeatureMarquee";
 import GiftProgressBar from "@/components/GiftProgressBar";
 import HeroCarousel from "@/components/HeroCarousel";
 import Celebration from "@/components/Celebration";
@@ -65,6 +66,14 @@ export default function GiftingScreen({
   const prevGiftCount = useRef<number | null>(null);
   useEffect(() => {
     if (!hydrated) return;
+    // Check if the share popup was requested from another screen (e.g. ProductDetails).
+    if (typeof window !== "undefined") {
+      const flag = window.sessionStorage.getItem("gift:showSharePopup");
+      if (flag === "1" && gifts.length === 1 && !gift2Unlocked) {
+        setShowSharePopup(true);
+        window.sessionStorage.removeItem("gift:showSharePopup");
+      }
+    }
     if (prevGiftCount.current === 0 && gifts.length === 1 && !gift2Unlocked) {
       setShowSharePopup(true);
     }
@@ -90,10 +99,10 @@ export default function GiftingScreen({
   function handleWhatsAppShare() {
     unlockGift2();
     const shareText = encodeURIComponent(
-      "Hey! I am sharing with you an exclusive upto ₹1000 gift invite link from Intaara. Pick your favourite jewellery gift, I have already selected mine. \nCheck it out : https://intaara.in/$ExclusiveFriendinvite"
+      "Hey! I am sharing with you an exclusive upto ₹1000 gift invite link from Intaara. Pick your favourite jewellery gift, I have already selected mine. \nCheck it out : https://wa.me/917096165209?text=Hi"
     );
     const a = document.createElement("a");
-    a.href = `https://wa.me/?text=${shareText}`;
+    a.href = `https://api.whatsapp.com/send?text=${shareText}`;
     a.target = "_blank";
     a.rel = "noopener noreferrer";
     document.body.appendChild(a);
@@ -355,8 +364,15 @@ export default function GiftingScreen({
         ) : (
           <>
             <div className="grid grid-cols-2 gap-3">
-              {products.map((p) => (
-                <GiftCard key={p.id} product={p} onLockedClick={() => setShowSharePopup(true)} />
+              {products.map((p, i) => (
+                <Fragment key={p.id}>
+                  <GiftCard product={p} onLockedClick={() => setShowSharePopup(true)} />
+                  {(i + 1) % 4 === 0 && i < products.length - 1 && (
+                    <div className="col-span-2 -mx-4 my-1">
+                      <FeatureMarquee />
+                    </div>
+                  )}
+                </Fragment>
               ))}
             </div>
             {hasNextPage && (
