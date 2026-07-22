@@ -1,9 +1,9 @@
 "use client";
 
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, Gift, Loader2, PartyPopper, RefreshCw, Share2, Sparkles } from "lucide-react";
 import Link from "next/link";
-import type { Product } from "@/data/products";
+import type { Category, Product } from "@/data/products";
 import { useAppStore } from "@/store/AppStore";
 import { useCountUp } from "@/hooks/useCountUp";
 import GiftCard from "@/components/GiftCard";
@@ -16,10 +16,12 @@ export default function GiftingScreen({
   products: initialProducts,
   hasNextPage: initialHasNextPage,
   endCursor: initialEndCursor,
+  categories,
 }: {
   products: Product[];
   hasNextPage: boolean;
   endCursor: string | null;
+  categories: Category[];
 }) {
   const { gifts, giftTotal, giftsFull, hydrated, gift2Unlocked, unlockGift2 } = useAppStore();
   const [showPopup, setShowPopup] = useState(false);
@@ -33,6 +35,16 @@ export default function GiftingScreen({
   const [cursor, setCursor] = useState<string | null>(initialEndCursor);
   const [loadingMore, setLoadingMore] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // Category filter (using Shopify collections)
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const filteredProducts = useMemo(
+    () =>
+      activeCategory
+        ? products.filter((p) => p.collections?.includes(activeCategory))
+        : products,
+    [activeCategory, products]
+  );
 
   // First-visit welcome popup — shows once, then never again.
   useEffect(() => {
@@ -99,7 +111,7 @@ export default function GiftingScreen({
   function handleWhatsAppShare() {
     unlockGift2();
     const shareText = encodeURIComponent(
-      "Hey! I am sharing with you an exclusive upto ₹1000 gift invite link from Intaara. Pick your favourite jewellery gift, I have already selected mine. \nCheck it out : https://wa.me/917096165209?text=Hi"
+      "Hey! I am sharing with you an exclusive upto ₹1000 gift invite link from Intaara. Pick your favourite jewellery gift, I have already selected mine. \nCheck it out : https://wa.me/918076130691?text=Hi%20Intaara%2C%20I%20got%20Exclusive%20Invite%20IJ221"
     );
     const a = document.createElement("a");
     a.href = `https://api.whatsapp.com/send?text=${shareText}`;
@@ -363,11 +375,38 @@ export default function GiftingScreen({
           <EmptyState message="No free gifts available right now. Remove the `non-gift` tag from Shopify products to populate this screen." />
         ) : (
           <>
+            {categories.length > 1 && (
+              <div className="no-scrollbar -mx-4 mb-3 flex gap-2 overflow-x-auto px-4 pb-1">
+                <button
+                  onClick={() => setActiveCategory(null)}
+                  className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition ${
+                    activeCategory === null
+                      ? "bg-sage-700 text-white"
+                      : "bg-sage-100 text-sage-700"
+                  }`}
+                >
+                  All
+                </button>
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setActiveCategory(cat.id)}
+                    className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition ${
+                      activeCategory === cat.id
+                        ? "bg-sage-700 text-white"
+                        : "bg-sage-100 text-sage-700"
+                    }`}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            )}
             <div className="grid grid-cols-2 gap-3">
-              {products.map((p, i) => (
+              {filteredProducts.map((p, i) => (
                 <Fragment key={p.id}>
                   <GiftCard product={p} onLockedClick={() => setShowSharePopup(true)} />
-                  {(i + 1) % 4 === 0 && i < products.length - 1 && (
+                  {(i + 1) % 4 === 0 && i < filteredProducts.length - 1 && (
                     <div className="col-span-2 -mx-4 my-1">
                       <FeatureMarquee />
                     </div>

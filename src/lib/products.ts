@@ -269,6 +269,20 @@ export async function getGiftProductsAfter(
   return fetchProducts("-tag:non-gift", 24, after);
 }
 
+/** All non-gift products, paginating through every page. */
+export async function getAllGiftProducts(): Promise<Product[]> {
+  const all: Product[] = [];
+  let cursor: string | null = null;
+  let hasNext = true;
+  while (hasNext) {
+    const page = await fetchProducts("-tag:non-gift", 250, cursor);
+    all.push(...page.products);
+    hasNext = page.hasNextPage;
+    cursor = page.endCursor;
+  }
+  return all;
+}
+
 /** Redeem & Shop screen: all products in Shopify. */
 export async function getShopProducts(): Promise<ProductPage> {
   return fetchProducts("", 100);

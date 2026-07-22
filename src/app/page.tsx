@@ -1,26 +1,24 @@
-import { getGiftProducts } from "@/lib/products";
-import type { Product } from "@/data/products";
+import { getAllGiftProducts, getShopCollections } from "@/lib/products";
+import type { Category, Product } from "@/data/products";
 import GiftingScreen from "./GiftingScreen";
 
 export const revalidate = 3600;
 
 export default async function GiftingPage() {
   let products: Product[] = [];
-  let hasNextPage = false;
-  let endCursor = null as string | null;
+  let categories: Category[] = [];
   try {
-    const page = await getGiftProducts();
-    products = page.products;
-    hasNextPage = page.hasNextPage;
-    endCursor = page.endCursor;
+    products = await getAllGiftProducts();
+    categories = await getShopCollections(products);
   } catch (err) {
     console.error("Failed to load gift products from Shopify:", err);
   }
   return (
     <GiftingScreen
       products={products}
-      hasNextPage={hasNextPage}
-      endCursor={endCursor}
+      hasNextPage={false}
+      endCursor={null}
+      categories={categories}
     />
   );
 }

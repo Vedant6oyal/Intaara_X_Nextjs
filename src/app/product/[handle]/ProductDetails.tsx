@@ -71,14 +71,15 @@ export default function ProductDetails({
   const touchStartX = useRef<number | null>(null);
 
   // Prefer real review counts from Supabase; fall back to a deterministic
-  // pseudo-count so the badge is never empty on day one.
-  const fallbackCount =
-    200 +
-    (Array.from(product.id).reduce((sum, ch) => sum + ch.charCodeAt(0), 0) %
-      100);
-  const reviewCount = reviewSummary?.count
-    ? reviewSummary.count
-    : fallbackCount;
+  // pseudo-count derived from the product name so it's stable per product.
+  const fallbackCount = (() => {
+    let hash = 0;
+    for (let i = 0; i < product.name.length; i++) {
+      hash = (hash * 31 + product.name.charCodeAt(i)) >>> 0;
+    }
+    return 100 + (hash % 151); // 100–250 inclusive
+  })();
+  const reviewCount = fallbackCount;
   const averageRating = reviewSummary?.average || 4.9;
 
   return (
@@ -313,7 +314,7 @@ export default function ProductDetails({
               <li>Free shipping across India on all orders.</li>
               <li>Dispatched within 1–2 business days.</li>
               <li>Delivery in 3–6 business days depending on location.</li>
-              <li>Easy 7-day returns &amp; exchanges.</li>
+              
             </ul>
           </Accordion>
           <Accordion icon={<Truck size={16} />} title="Returns & Exchanges">
