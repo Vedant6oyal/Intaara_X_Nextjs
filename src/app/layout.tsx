@@ -1,15 +1,15 @@
 import type { Metadata, Viewport } from "next";
-import { Cinzel } from "next/font/google";
+import { Nunito_Sans } from "next/font/google";
 import "./globals.css";
 import { AppStoreProvider } from "@/store/AppStore";
 import Header from "@/components/Header";
 import CartDrawer from "@/components/CartDrawer";
 import ShiprocketLoader from "@/components/ShiprocketLoader";
 
-const cinzel = Cinzel({
+const nunito = Nunito_Sans({
   subsets: ["latin"],
-  weight: ["400", "600", "700"],
-  variable: "--font-cinzel",
+  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-nunito",
   display: "swap",
 });
 
@@ -36,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={cinzel.variable} suppressHydrationWarning>
+    <html lang="en" className={nunito.variable} suppressHydrationWarning>
       <head />
       <body suppressHydrationWarning>
         <AppStoreProvider>

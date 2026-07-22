@@ -28,8 +28,9 @@ const config: Config = {
         cream: "#ffffff",
       },
       fontFamily: {
-        serif: ["Georgia", "Cambria", "Times New Roman", "serif"],
-        cinzel: ["var(--font-cinzel)", "Georgia", "serif"],
+        sans: ["var(--font-nunito)", "system-ui", "sans-serif"],
+        serif: ["var(--font-nunito)", "system-ui", "sans-serif"],
+        cinzel: ["var(--font-nunito)", "system-ui", "sans-serif"],
       },
       keyframes: {
         pop: {
@@ -126,7 +127,7 @@ const config: Config = {
         "cta-glow": "cta-glow 1.8s ease-in-out infinite",
         marquee: "marquee 28s linear infinite",
         "marquee-fast": "marquee 5s linear infinite",
-        "marquee-medium": "marquee 12s linear infinite",
+        "marquee-medium": "marquee 10s linear infinite",
         wiggle: "wiggle 4s ease-in-out infinite",
         burst: "burst 1.8s cubic-bezier(0.16, 0.84, 0.44, 1) forwards",
         "shine-sweep": "shine-sweep 1.6s ease-in-out",

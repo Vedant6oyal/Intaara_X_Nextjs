@@ -247,7 +247,7 @@ export default function ProductDetails({
           </div>
         ) : (
           <div className="flex items-baseline gap-3">
-            <span className="font text-3xl font-bold text-gray-900">
+            <span className="font text-2xl font-bold text-gray-900">
               ₹{product.price.toLocaleString("en-IN")}
             </span>
             {product.mrp && (
@@ -447,7 +447,7 @@ function Badge({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
     <div className="flex flex-col items-center gap-1 rounded-xl bg-sage-50 px-2 py-3 text-center ring-1 ring-sage-100">
       <span>{icon}</span>
-      <span className="text-[11px] font-semibold text-gray-700">{label}</span>
+      <span className="text-[13px] font-bold text-gray-700">{label}</span>
     </div>
   );
 }

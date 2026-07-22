@@ -6,7 +6,7 @@ import Image from "next/image";
 const SLIDES = [
   "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Hero_Carousel_1_alt.png",
   "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Hareo_Carousel_2_alt.png",
-  "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Hero_carousel_3(compressed%20by%20quillbot.com).png"  
+  "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Hero_Carousel_3_alt_new.png"  
 ];
 
 const AUTOPLAY_MS = 3800;

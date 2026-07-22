@@ -329,7 +329,7 @@ export default function GiftingScreen({
               {MARQUEE_ITEMS.map((label, i) => (
                 <span
                   key={`${dup}-${i}`}
-                  className="px-6 text-[12px] font-semibold uppercase tracking-[0.18em] text-white"
+                  className="px-6 text-[12px] font-extrabold uppercase tracking-[0.18em] text-white"
                 >
                   {label}
                   <span className="ml-6 text-white/70">·</span>
@@ -345,7 +345,7 @@ export default function GiftingScreen({
         <div className="fixed inset-x-0 bottom-4 z-30 mx-auto w-full max-w-[480px] px-4">
           <Link
             href="/redeem"
-            className={`flex items-center justify-center gap-1.5 rounded-xl bg-[#1A3C2A] py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-[#152e20] ${
+            className={`flex items-center justify-center gap-1.5 rounded-xl bg-[#1A3C2A] py-3 text-sm font-bold text-white shadow-lg transition hover:bg-[#152e20] ${
               gifts.length >= 2 ? "animate-cta-glow" : ""
             }`}
           >
