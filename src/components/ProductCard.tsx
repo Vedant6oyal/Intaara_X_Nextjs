@@ -7,8 +7,9 @@ import { useAppStore } from "@/store/AppStore";
 import type { Product } from "@/data/products";
 
 export default function ProductCard({ product, discountUnlocked = false }: { product: Product; discountUnlocked?: boolean }) {
-  const { inCart, addToCart, removeFromCart } = useAppStore();
+  const { inCart, addToCart, removeFromCart, isWishlisted, toggleWishlist } = useAppStore();
   const qty = inCart(product.id);
+  const wishlisted = isWishlisted(product.id);
   const saved = product.mrp ? product.mrp - product.price : 0;
   const href = product.handle ? `/product/${product.handle}?from=redeem` : "#";
 
@@ -26,10 +27,13 @@ export default function ProductCard({ product, discountUnlocked = false }: { pro
         )}
         <button
           aria-label="Wishlist"
-          onClick={(e) => e.preventDefault()}
-          className="absolute right-2 top-2 z-10 grid h-7 w-7 place-items-center rounded-full bg-white/90 text-gray-400 shadow"
+          onClick={(e) => {
+            e.preventDefault();
+            toggleWishlist(product);
+          }}
+          className="absolute right-2 top-2 z-10 grid h-7 w-7 place-items-center rounded-full bg-white/90 shadow transition"
         >
-          <Heart size={15} />
+          <Heart size={15} className={wishlisted ? "fill-red-500 text-red-500" : "text-gray-400"} />
         </button>
         <Image
           src={product.image}

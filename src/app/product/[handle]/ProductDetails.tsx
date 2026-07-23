@@ -47,6 +47,8 @@ export default function ProductDetails({
     removeFromCart,
     openCart,
     cartCount,
+    isWishlisted,
+    toggleWishlist,
   } = useAppStore();
 
   // Reviews load client-side directly from Supabase (no serverless function).
@@ -152,9 +154,10 @@ export default function ProductDetails({
         )}
         <button
           aria-label="Wishlist"
-          className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/95 text-gray-400 shadow"
+          onClick={() => toggleWishlist(product)}
+          className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/95 shadow transition"
         >
-          <Heart size={16} />
+          <Heart size={16} className={isWishlisted(product.id) ? "fill-red-500 text-red-500" : "text-gray-400"} />
         </button>
 
         {/* Dots */}

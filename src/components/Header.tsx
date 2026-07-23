@@ -3,11 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, ShoppingBag, Gift, X, Truck, RotateCcw, ShieldCheck, FileText, Home, Sparkles } from "lucide-react";
+import { Menu, ShoppingBag, Gift, X, Truck, RotateCcw, ShieldCheck, FileText, Home, Sparkles, Heart } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 
 export default function Header({ title = "INTAARA" }: { title?: string }) {
-  const { cartCount, gifts, openCart } = useAppStore();
+  const { cartCount, gifts, openCart, wishlist, openWishlist } = useAppStore();
   const pathname = usePathname();
   const isGiftScreen = pathname === "/";
   const isRedeemScreen = pathname === "/redeem";
@@ -37,7 +37,7 @@ export default function Header({ title = "INTAARA" }: { title?: string }) {
   ];
 
   const policyLinks = [
-    { href: "/policies/shipping", label: "Shipping Policy", icon: Truck },
+    { href: "/policies/shipping", label: "Shipping & Delivery", icon: Truck },
     { href: "/policies/returns", label: "Returns & Exchange", icon: RotateCcw },
     { href: "/policies/privacy", label: "Privacy Policy", icon: ShieldCheck },
     { href: "/policies/terms", label: "Terms of Service", icon: FileText },
@@ -74,6 +74,19 @@ export default function Header({ title = "INTAARA" }: { title?: string }) {
                 </span>
               )}
             </Link>
+            <button
+              type="button"
+              aria-label="Open wishlist"
+              onClick={openWishlist}
+              className="relative transition hover:text-white"
+            >
+              <Heart size={22} />
+              {wishlist.length > 0 && (
+                <span className="absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-sage-700">
+                  {wishlist.length}
+                </span>
+              )}
+            </button>
             <button
               type="button"
               aria-label="Open cart"

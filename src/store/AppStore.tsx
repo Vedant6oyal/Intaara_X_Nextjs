@@ -32,6 +32,14 @@ type AppState = {
   addToCart: (p: Product) => void;
   removeFromCart: (id: string) => void;
 
+  wishlist: Product[];
+  isWishlisted: (id: string) => boolean;
+  toggleWishlist: (p: Product) => void;
+  wishlistOpen: boolean;
+  openWishlist: () => void;
+  closeWishlist: () => void;
+  setWishlistOpen: (open: boolean) => void;
+
   /** True once we've finished reading from localStorage on the client. */
   hydrated: boolean;
 
@@ -45,6 +53,7 @@ type Persisted = {
   gifts: Product[];
   cart: CartLine[];
   gift2Unlocked?: boolean;
+  wishlist?: Product[];
 };
 
 const AppContext = createContext<AppState | null>(null);
@@ -67,12 +76,16 @@ function loadPersisted(): Persisted | null {
 export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   const [gifts, setGifts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartLine[]>([]);
+  const [wishlist, setWishlist] = useState<Product[]>([]);
   const [gift2Unlocked, setGift2Unlocked] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const [wishlistOpen, setWishlistOpen] = useState(false);
 
   const openCart = useCallback(() => setCartOpen(true), []);
   const closeCart = useCallback(() => setCartOpen(false), []);
+  const openWishlist = useCallback(() => setWishlistOpen(true), []);
+  const closeWishlist = useCallback(() => setWishlistOpen(false), []);
 
   // Load from localStorage on mount.
   useEffect(() => {
@@ -82,6 +95,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       setGifts(persisted.gifts.slice(0, MAX_GIFTS));
       setCart(persisted.cart);
       if (persisted.gift2Unlocked) setGift2Unlocked(true);
+      if (persisted.wishlist) setWishlist(persisted.wishlist);
     }
     setHydrated(true);
   }, []);
@@ -93,12 +107,12 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     try {
       window.localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ gifts, cart, gift2Unlocked } satisfies Persisted)
+        JSON.stringify({ gifts, cart, gift2Unlocked, wishlist } satisfies Persisted)
       );
     } catch {
       // ignore quota / private-mode errors
     }
-  }, [gifts, cart, hydrated]);
+  }, [gifts, cart, hydrated, wishlist]);
 
   const giftTotal = useMemo(
     () => gifts.reduce((sum, g) => sum + g.price, 0),
@@ -150,6 +164,19 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     );
   }, []);
 
+  const isWishlisted = useCallback(
+    (id: string) => wishlist.some((w) => w.id === id),
+    [wishlist]
+  );
+
+  const toggleWishlist = useCallback((p: Product) => {
+    setWishlist((prev) => {
+      const exists = prev.some((w) => w.id === p.id);
+      if (exists) return prev.filter((w) => w.id !== p.id);
+      return [...prev, p];
+    });
+  }, []);
+
   const cartCount = useMemo(
     () => cart.reduce((s, l) => s + l.qty, 0),
     [cart]
@@ -178,6 +205,13 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     inCart,
     addToCart,
     removeFromCart,
+    wishlist,
+    isWishlisted,
+    toggleWishlist,
+    wishlistOpen,
+    openWishlist,
+    closeWishlist,
+    setWishlistOpen,
     hydrated,
   };
 

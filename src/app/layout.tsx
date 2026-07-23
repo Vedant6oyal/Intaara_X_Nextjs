@@ -4,6 +4,7 @@ import "./globals.css";
 import { AppStoreProvider } from "@/store/AppStore";
 import Header from "@/components/Header";
 import CartDrawer from "@/components/CartDrawer";
+import WishlistDrawer from "@/components/WishlistDrawer";
 import ShiprocketLoader from "@/components/ShiprocketLoader";
 
 const nunito = Nunito_Sans({
@@ -18,8 +19,16 @@ export const metadata: Metadata = {
   description:
     "Pick free anti-tarnish jewellery gifts worth up to ₹1000, then redeem them with your purchase.",
   icons: {
-    icon: "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Intaara_Favicon.avif",
-    apple: "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Intaara_Favicon.avif",
+    icon: [
+      { url: "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/favicon.ico", sizes: "any" },
+      { url: "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+      { url: "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/favicon-android-chrome-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/favicon-android-chrome-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/favicon-apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
   },
 };
 
@@ -45,6 +54,7 @@ export default function RootLayout({
             <main className="flex-1">{children}</main>
           </div>
           <CartDrawer />
+          <WishlistDrawer />
         </AppStoreProvider>
 
         <ShiprocketLoader />
