@@ -1,8 +1,10 @@
 # example netlify.toml
 [build]
   command = "npm run build"
-  functions = "netlify/functions"
   publish = ".next"
+
+[build.environment]
+  SECRETS_SCAN_OMIT_KEYS = "SHOPIFY_API_VERSION"
 
   ## Uncomment to use this redirect for Single Page Applications like create-react-app.
   ## Not needed for static site generators.
