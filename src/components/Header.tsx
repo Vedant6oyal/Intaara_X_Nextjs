@@ -38,7 +38,7 @@ export default function Header({ title = "INTAARA" }: { title?: string }) {
 
   const policyLinks = [
     { href: "/policies/shipping", label: "Shipping & Delivery", icon: Truck },
-    { href: "/policies/returns", label: "Returns & Exchange", icon: RotateCcw },
+    { href: "/policies/returns", label: "Refund & Exchange", icon: RotateCcw },
     { href: "/policies/privacy", label: "Privacy Policy", icon: ShieldCheck },
     { href: "/policies/terms", label: "Terms of Service", icon: FileText },
   ];
@@ -142,6 +142,24 @@ export default function Header({ title = "INTAARA" }: { title?: string }) {
                   </Link>
                 );
               })}
+
+              <div className="my-3 border-t border-black/5" />
+
+              <button
+                onClick={() => {
+                  setMenuOpen(false);
+                  openWishlist();
+                }}
+                className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+              >
+                <Heart size={18} />
+                Wishlist
+                {wishlist.length > 0 && (
+                  <span className="ml-auto grid h-5 w-5 place-items-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                    {wishlist.length}
+                  </span>
+                )}
+              </button>
 
               <div className="my-3 border-t border-black/5" />
 

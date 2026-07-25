@@ -99,6 +99,9 @@ export default function CartDrawer() {
             }
           : {}),
       });
+      // Close our Radix modal so its focus trap / overlay doesn't block the
+      // Shiprocket checkout overlay (otherwise its buttons become unclickable).
+      closeCart();
       // The Shiprocket overlay takes over from here; release the button so it
       // isn't stuck if the user dismisses the checkout.
       setTimeout(() => setLoading(false), 2000);

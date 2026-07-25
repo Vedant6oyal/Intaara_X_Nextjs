@@ -6,7 +6,7 @@ const ICON_BASE =
 const FEATURES = [
   { label: "Anti-Tarnish — Doesn't Turn Black", icon: `${ICON_BASE}/star.png` },
   { label: "Waterproof", icon: `${ICON_BASE}/waterproof_1.png` },
-  { label: "Skin-Safe", icon: `${ICON_BASE}/skin_friendly.png` },
+  { label: "Skin-Friendly", icon: `${ICON_BASE}/skin_friendly.png` },
   { label: "18k Gold Plated", icon: `${ICON_BASE}/gold_plated_icon.png` },
 ];
 

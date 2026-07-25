@@ -13,6 +13,9 @@ export default function GiftCard({ product, onLockedClick }: { product: Product;
   const locked = !selected && gift2Locked;
   const saved = product.mrp ? product.mrp - product.price : 0;
   const href = product.handle ? `/product/${product.handle}` : "#";
+  const saveScrollPosition = () => {
+    window.sessionStorage.setItem("gifting:scroll", String(window.scrollY));
+  };
 
   function handleLockedClick() {
     if (onLockedClick) {
@@ -32,7 +35,11 @@ export default function GiftCard({ product, onLockedClick }: { product: Product;
         </span>
       )}
 
-      <Link href={href} className="relative block aspect-square w-full bg-sage-50">
+      <Link
+        href={href}
+        onClick={saveScrollPosition}
+        className="relative block aspect-square w-full bg-sage-50"
+      >
         <Image
           src={product.image}
           alt={product.name}
@@ -53,6 +60,7 @@ export default function GiftCard({ product, onLockedClick }: { product: Product;
       <div className="flex flex-1 flex-col p-3">
         <Link
           href={href}
+          onClick={saveScrollPosition}
           className="line-clamp-2 text-sm font-medium text-gray-800 hover:text-sage-700"
         >
           {product.name}

@@ -61,47 +61,52 @@ export default function RedeemScreen({
 
   // Per-category scroll position preservation.
   const scrollPositions = useRef<Record<string, number>>({});
+  const [categoryRestored, setCategoryRestored] = useState(false);
+  const skipCategoryScroll = useRef(false);
   const switchCategory = (cat: string | null) => {
     scrollPositions.current[activeCategory ?? "__all"] = window.scrollY;
     setActiveCategory(cat);
+    if (cat) window.sessionStorage.setItem("redeem:category", cat);
+    else window.sessionStorage.removeItem("redeem:category");
   };
 
   // Restore the saved category after mount (not during render, to avoid a
   // hydration mismatch between server and client).
-  const categoryRestored = useRef(false);
   useEffect(() => {
     const saved = window.sessionStorage.getItem("redeem:category");
-    if (saved) setActiveCategory(saved);
-    categoryRestored.current = true;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (saved) {
+      skipCategoryScroll.current = true;
+      setActiveCategory(saved);
+    }
+    setCategoryRestored(true);
   }, []);
-
-  // Persist the active category so it survives navigation to a product page.
-  // Skip until the restore above has run, so we don't wipe the saved value.
-  useEffect(() => {
-    if (typeof window === "undefined" || !categoryRestored.current) return;
-    if (activeCategory) window.sessionStorage.setItem("redeem:category", activeCategory);
-    else window.sessionStorage.removeItem("redeem:category");
-  }, [activeCategory]);
 
   useEffect(() => {
     const onScroll = () => {
       setHeaderHidden(window.scrollY > 10);
-      // Persist scroll position so back-navigation lands in the same spot.
-      window.sessionStorage.setItem("redeem:scroll", String(window.scrollY));
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // On first mount, restore the scroll position saved before navigating away.
+  // Restore scroll after the saved collection has been applied and its product
+  // grid has rendered. Restoring against the initial "All" grid would be
+  // clamped when that grid is replaced by a shorter collection.
+  const scrollRestored = useRef(false);
   useEffect(() => {
+    if (!categoryRestored || scrollRestored.current) return;
+    const savedCategory = window.sessionStorage.getItem("redeem:category");
+    if (savedCategory && activeCategory !== savedCategory) return;
     const saved = window.sessionStorage.getItem("redeem:scroll");
-    if (saved != null) {
-      requestAnimationFrame(() => window.scrollTo(0, parseInt(saved, 10)));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    if (saved == null) return;
+    scrollRestored.current = true;
+    const target = Number(saved);
+    const restore = () => window.scrollTo(0, target);
+    requestAnimationFrame(() => {
+      restore();
+      window.setTimeout(restore, 100);
+    });
+  }, [activeCategory, categoryRestored]);
 
   // Restore scroll position when switching categories in-session. Skip the
   // very first render so it doesn't clobber the sessionStorage restore above.
@@ -109,6 +114,10 @@ export default function RedeemScreen({
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
+      return;
+    }
+    if (skipCategoryScroll.current) {
+      skipCategoryScroll.current = false;
       return;
     }
     const saved = scrollPositions.current[activeCategory ?? "__all"];

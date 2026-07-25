@@ -5,7 +5,10 @@ import { AppStoreProvider } from "@/store/AppStore";
 import Header from "@/components/Header";
 import CartDrawer from "@/components/CartDrawer";
 import WishlistDrawer from "@/components/WishlistDrawer";
+import Footer from "@/components/Footer";
 import ShiprocketLoader from "@/components/ShiprocketLoader";
+import { getAllShopProducts, getShopCollections } from "@/lib/products";
+import type { Category } from "@/data/products";
 
 const nunito = Nunito_Sans({
   subsets: ["latin"],
@@ -39,11 +42,19 @@ export const viewport: Viewport = {
   themeColor: "#1A3C2A",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  let categories: Category[] = [];
+  try {
+    const products = await getAllShopProducts();
+    categories = await getShopCollections(products);
+  } catch (err) {
+    console.error("Failed to load footer collections:", err);
+  }
+
   return (
     <html lang="en" className={nunito.variable} suppressHydrationWarning>
       <head />
@@ -52,6 +63,7 @@ export default function RootLayout({
           <div className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col bg-cream shadow-xl">
             <Header />
             <main className="flex-1">{children}</main>
+            <Footer categories={categories} />
           </div>
           <CartDrawer />
           <WishlistDrawer />

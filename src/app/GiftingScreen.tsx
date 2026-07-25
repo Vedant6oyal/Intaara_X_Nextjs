@@ -38,6 +38,17 @@ export default function GiftingScreen({
 
   // Category filter (using Shopify collections)
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
+  const [categoryRestored, setCategoryRestored] = useState(false);
+  const selectCategory = (category: string | null) => {
+    setActiveCategory(category);
+    if (category) window.sessionStorage.setItem("gifting:category", category);
+    else window.sessionStorage.removeItem("gifting:category");
+  };
+  useEffect(() => {
+    const saved = window.sessionStorage.getItem("gifting:category");
+    if (saved) setActiveCategory(saved);
+    setCategoryRestored(true);
+  }, []);
   const filteredProducts = useMemo(
     () =>
       activeCategory
@@ -45,6 +56,19 @@ export default function GiftingScreen({
         : products,
     [activeCategory, products]
   );
+  const scrollRestored = useRef(false);
+  useEffect(() => {
+    if (!categoryRestored || scrollRestored.current) return;
+    const saved = window.sessionStorage.getItem("gifting:scroll");
+    if (saved == null) return;
+    scrollRestored.current = true;
+    const target = Number(saved);
+    const restore = () => window.scrollTo(0, target);
+    requestAnimationFrame(() => {
+      restore();
+      window.setTimeout(restore, 100);
+    });
+  }, [categoryRestored, filteredProducts.length]);
 
   // First-visit welcome popup — shows once, then never again.
   useEffect(() => {
@@ -378,7 +402,7 @@ export default function GiftingScreen({
             {categories.length > 1 && (
               <div className="no-scrollbar -mx-4 mb-3 flex gap-2 overflow-x-auto px-4 pb-1">
                 <button
-                  onClick={() => setActiveCategory(null)}
+                  onClick={() => selectCategory(null)}
                   className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition ${
                     activeCategory === null
                       ? "bg-sage-700 text-white"
@@ -390,7 +414,7 @@ export default function GiftingScreen({
                 {categories.map((cat) => (
                   <button
                     key={cat.id}
-                    onClick={() => setActiveCategory(cat.id)}
+                    onClick={() => selectCategory(cat.id)}
                     className={`shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition ${
                       activeCategory === cat.id
                         ? "bg-sage-700 text-white"
@@ -469,7 +493,7 @@ function EmptyState({ message }: { message: string }) {
 const MARQUEE_ITEMS = [
   "Gold Plated",
   "Waterproof",
-  "Skin Safe",
+  "Skin Friendly",
   "Free Shipping",
   "24Hr Easy Returns",
 ];

@@ -14,6 +14,7 @@ export default function WishlistDrawer() {
     closeWishlist,
     toggleWishlist,
     addToCart,
+    openCart,
   } = useAppStore();
 
   return (
@@ -99,7 +100,11 @@ export default function WishlistDrawer() {
                         </span>
                         <div className="mt-auto flex items-center gap-2">
                           <button
-                            onClick={() => addToCart(product)}
+                            onClick={() => {
+                              addToCart(product);
+                              closeWishlist();
+                              openCart();
+                            }}
                             className="rounded-lg bg-sage-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-sage-700"
                           >
                             Add to Cart
