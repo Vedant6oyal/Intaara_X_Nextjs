@@ -9,6 +9,7 @@ import React, {
   useCallback,
 } from "react";
 import { type Product } from "@/data/products";
+import { trackEvent } from "@/lib/analytics";
 
 const MAX_GIFTS = 2;
 const STORAGE_KEY = "giftbox-app:v1";
@@ -127,18 +128,27 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   const giftsFull = gifts.length >= MAX_GIFTS;
   const gift2Locked = gifts.length === 1 && !gift2Unlocked;
 
-  const unlockGift2 = useCallback(() => setGift2Unlocked(true), []);
+  const unlockGift2 = useCallback(() => {
+    if (!gift2Unlocked) trackEvent("second_gift_unlocked");
+    setGift2Unlocked(true);
+  }, [gift2Unlocked]);
 
   const toggleGift = useCallback((p: Product) => {
-    setGifts((prev) => {
-      const exists = prev.some((g) => g.id === p.id);
-      if (exists) return prev.filter((g) => g.id !== p.id);
-      if (prev.length >= MAX_GIFTS) return prev;
-      // Block adding a 2nd gift until the user shares via WhatsApp.
-      if (prev.length === 1 && !gift2Unlocked) return prev;
-      return [...prev, p];
+    const exists = gifts.some((g) => g.id === p.id);
+    if (exists) {
+      trackEvent("gift_removed", { gift_id: p.id, gift_name: p.name });
+      setGifts((prev) => prev.filter((g) => g.id !== p.id));
+      return;
+    }
+    if (gifts.length >= MAX_GIFTS || (gifts.length === 1 && !gift2Unlocked)) return;
+    trackEvent("gift_selected", {
+      gift_id: p.id,
+      gift_name: p.name,
+      gift_number: gifts.length + 1,
+      gift_price: p.price,
     });
-  }, [gift2Unlocked]);
+    setGifts((prev) => [...prev, p]);
+  }, [gift2Unlocked, gifts]);
 
   const inCart = useCallback(
     (id: string) => cart.find((l) => l.product.id === id)?.qty ?? 0,
@@ -146,23 +156,38 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   );
 
   const addToCart = useCallback((p: Product) => {
+    const currentQuantity = cart.find((line) => line.product.id === p.id)?.qty ?? 0;
+    trackEvent("redeem_product_added", {
+      product_id: p.id,
+      product_name: p.name,
+      product_price: p.price,
+      quantity_after: currentQuantity + 1,
+    });
     setCart((prev) => {
-      const found = prev.find((l) => l.product.id === p.id);
+      const found = prev.find((line) => line.product.id === p.id);
       if (found)
-        return prev.map((l) =>
-          l.product.id === p.id ? { ...l, qty: l.qty + 1 } : l
+        return prev.map((line) =>
+          line.product.id === p.id ? { ...line, qty: line.qty + 1 } : line
         );
       return [...prev, { product: p, qty: 1 }];
     });
-  }, []);
+  }, [cart]);
 
   const removeFromCart = useCallback((id: string) => {
+    const line = cart.find((item) => item.product.id === id);
+    if (line) {
+      trackEvent("redeem_product_removed", {
+        product_id: line.product.id,
+        product_name: line.product.name,
+        quantity_after: line.qty - 1,
+      });
+    }
     setCart((prev) =>
       prev
-        .map((l) => (l.product.id === id ? { ...l, qty: l.qty - 1 } : l))
-        .filter((l) => l.qty > 0)
+        .map((item) => (item.product.id === id ? { ...item, qty: item.qty - 1 } : item))
+        .filter((item) => item.qty > 0)
     );
-  }, []);
+  }, [cart]);
 
   const isWishlisted = useCallback(
     (id: string) => wishlist.some((w) => w.id === id),

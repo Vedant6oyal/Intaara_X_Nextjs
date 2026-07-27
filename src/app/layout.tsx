@@ -7,6 +7,7 @@ import CartDrawer from "@/components/CartDrawer";
 import WishlistDrawer from "@/components/WishlistDrawer";
 import Footer from "@/components/Footer";
 import ShiprocketLoader from "@/components/ShiprocketLoader";
+import AnalyticsTracker from "@/components/AnalyticsTracker";
 import { getAllShopProducts, getShopCollections } from "@/lib/products";
 import type { Category } from "@/data/products";
 
@@ -60,6 +61,7 @@ export default async function RootLayout({
       <head />
       <body suppressHydrationWarning>
         <AppStoreProvider>
+          <AnalyticsTracker />
           <div className="mx-auto flex min-h-screen w-full max-w-[480px] flex-col bg-cream shadow-xl">
             <Header />
             <main className="flex-1">{children}</main>

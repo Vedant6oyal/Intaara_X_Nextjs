@@ -27,6 +27,7 @@ import { useAppStore } from "@/store/AppStore";
 import { useReviews } from "@/hooks/useReviews";
 import type { Product } from "@/data/products";
 import type { Review, ReviewSummary } from "@/lib/reviews";
+import { trackEvent } from "@/lib/analytics";
 
 export default function ProductDetails({
   product,
@@ -360,6 +361,8 @@ export default function ProductDetails({
             onClick={() => {
               if (!selected && giftsFull) return;
               if (!selected && gift2Locked) {
+                trackEvent("share_cta_clicked", { share_channel: "whatsapp", source: "product_details" });
+                trackEvent("share_link_created", { share_channel: "whatsapp", source: "product_details" });
                 unlockGift2();
                 const shareText = encodeURIComponent(
                   "Hey! I just unlocked a FREE gift from Intaara 🎁 You can grab yours too! Check it out: https://intaara.com"

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 import { useCountUp } from "@/hooks/useCountUp";
+import { trackEvent } from "@/lib/analytics";
 import {
   SHIPROCKET_COUPON_CODE,
   toNumericVariantId,
@@ -88,6 +89,12 @@ export default function CartDrawer() {
           ? "INVITEONLYFIRSTFREE"
           : SHIPROCKET_COUPON_CODE;
 
+      trackEvent("checkout_started", {
+        gift_count: gifts.length,
+        redeem_item_count: cartCount,
+        cart_value: cartTotal,
+        coupon_code: coupon ?? null,
+      });
       window.shiprocketCheckoutEvents.buyDirect({
         type: "cart",
         products,
@@ -99,6 +106,12 @@ export default function CartDrawer() {
               },
             }
           : {}),
+      });
+      trackEvent("checkout_opened", {
+        gift_count: gifts.length,
+        redeem_item_count: cartCount,
+        cart_value: cartTotal,
+        coupon_code: coupon ?? null,
       });
       // Close our Radix modal so its focus trap / overlay doesn't block the
       // Shiprocket checkout overlay (otherwise its buttons become unclickable).

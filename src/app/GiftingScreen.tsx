@@ -11,6 +11,7 @@ import FeatureMarquee from "@/components/FeatureMarquee";
 import GiftProgressBar from "@/components/GiftProgressBar";
 import HeroCarousel from "@/components/HeroCarousel";
 import Celebration from "@/components/Celebration";
+import { trackEvent } from "@/lib/analytics";
 
 export default function GiftingScreen({
   products: initialProducts,
@@ -106,11 +107,13 @@ export default function GiftingScreen({
     if (typeof window !== "undefined") {
       const flag = window.sessionStorage.getItem("gift:showSharePopup");
       if (flag === "1" && gifts.length === 1 && !gift2Unlocked) {
+        trackEvent("second_gift_unlock_prompt_viewed", { source: "product_details" });
         setShowSharePopup(true);
         window.sessionStorage.removeItem("gift:showSharePopup");
       }
     }
     if (prevGiftCount.current === 0 && gifts.length === 1 && !gift2Unlocked) {
+      trackEvent("second_gift_unlock_prompt_viewed", { source: "gifting_screen" });
       setShowSharePopup(true);
     }
     prevGiftCount.current = gifts.length;
@@ -133,6 +136,8 @@ export default function GiftingScreen({
   const popupTotal = useCountUp(giftTotal, showPopup, 900);
 
   function handleWhatsAppShare() {
+    trackEvent("share_cta_clicked", { share_channel: "whatsapp" });
+    trackEvent("share_link_created", { share_channel: "whatsapp" });
     unlockGift2();
     const shareText = encodeURIComponent(
       "Hey! I am sharing with you an exclusive upto ₹1000 gift invite link from Intaara. Pick your favourite jewellery gift, I have already selected mine. \nCheck it out : https://wa.me/918076130691?text=Hi%20Intaara%2C%20I%20got%20Exclusive%20Invite%20IJ221"
