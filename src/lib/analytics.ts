@@ -70,6 +70,11 @@ function readAttribution(): Attribution {
   return attribution;
 }
 
+export function getAnonymousId() {
+  if (typeof window === "undefined") return null;
+  return getOrCreate(window.localStorage, ANONYMOUS_ID_KEY);
+}
+
 export function trackEvent(name: AnalyticsEventName, properties: AnalyticsProperties = {}) {
   if (typeof window === "undefined") return;
 

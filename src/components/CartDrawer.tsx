@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 import { useCountUp } from "@/hooks/useCountUp";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, getAnonymousId } from "@/lib/analytics";
 import {
   SHIPROCKET_COUPON_CODE,
   toNumericVariantId,
@@ -109,13 +109,12 @@ export default function CartDrawer() {
         type: "cart",
         products,
         ...(coupon ? { couponCode: coupon } : {}),
-        ...(gifts.length > 0
-          ? {
-              cartAttributes: {
-                free_gifts: gifts.map((g) => g.name).join(", "),
-              },
-            }
-          : {}),
+        cartAttributes: {
+          ...(gifts.length > 0
+            ? { free_gifts: gifts.map((g) => g.name).join(", ") }
+            : {}),
+          anonymous_id: getAnonymousId(),
+        },
       });
       trackEvent("checkout_opened", {
         gift_count: gifts.length,

@@ -8,6 +8,7 @@ import type { Category, Product } from "@/data/products";
 import { useAppStore } from "@/store/AppStore";
 import CategoryStrip from "@/components/CategoryStrip";
 import ProductCard from "@/components/ProductCard";
+import { trackEvent } from "@/lib/analytics";
 import FeatureMarquee from "@/components/FeatureMarquee";
 import Celebration from "@/components/Celebration";
 
