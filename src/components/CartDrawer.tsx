@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -8,8 +8,6 @@ import {
   ArrowRight,
   Gift,
   Loader2,
-  Minus,
-  Plus,
   ShoppingBag,
   Sparkles,
   Trash2,
@@ -41,9 +39,21 @@ export default function CartDrawer() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // 50% off on the second distinct product (1 unit only).
+  const expandedItems = useMemo(() => {
+    const items: { product: typeof cart[number]["product"]; isHalfOff: boolean }[] = [];
+  cart.forEach((line) => {
+      for (let i = 0; i < line.qty; i++) {
+        items.push({ product: line.product, isHalfOff: false });
+      }
+    });
+    if (items.length >= 2) items[1].isHalfOff = true;
+    return items;
+  }, [cart]);
+
   const discountAmount =
-    cart.length >= 2 ? Math.round(cart[1].product.price * 0.5) : 0;
+    expandedItems.length >= 2
+      ? Math.round(expandedItems[1].product.price * 0.5)
+      : 0;
   const discountedTotal = cartTotal - discountAmount;
 
   const mrpTotal = cart.reduce(
@@ -95,7 +105,7 @@ export default function CartDrawer() {
         cart_value: cartTotal,
         coupon_code: coupon ?? null,
       });
-      window.shiprocketCheckoutEvents.buyDirect({
+      window.shiprocketCheckoutEvents!.buyDirect({
         type: "cart",
         products,
         ...(coupon ? { couponCode: coupon } : {}),
@@ -113,11 +123,7 @@ export default function CartDrawer() {
         cart_value: cartTotal,
         coupon_code: coupon ?? null,
       });
-      // Close our Radix modal so its focus trap / overlay doesn't block the
-      // Shiprocket checkout overlay (otherwise its buttons become unclickable).
       closeCart();
-      // The Shiprocket overlay takes over from here; release the button so it
-      // isn't stuck if the user dismisses the checkout.
       setTimeout(() => setLoading(false), 2000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Checkout failed");
@@ -182,16 +188,15 @@ export default function CartDrawer() {
 
                 {cart.length > 0 && (
                   <ul className="flex flex-col gap-3">
-                    {cart.map((line, idx) => {
-                      const p = line.product;
+                    {expandedItems.map((item, idx) => {
+                      const p = item.product;
                       const saved = p.mrp ? p.mrp - p.price : 0;
-                      const isHalfOff = idx === 1 && discountAmount > 0;
-                      const lineTotal = isHalfOff
-                        ? p.price * line.qty - discountAmount
-                        : p.price * line.qty;
+                      const unitPrice = item.isHalfOff
+                        ? Math.round(p.price * 0.5)
+                        : p.price;
                       return (
                         <li
-                          key={p.id}
+                          key={`${p.id}-${idx}`}
                           className="flex gap-3 rounded-xl bg-gray-50 p-3"
                         >
                           <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg">
@@ -210,10 +215,7 @@ export default function CartDrawer() {
                               </h3>
                               <button
                                 aria-label={`Remove ${p.name}`}
-                                onClick={() => {
-                                  for (let i = 0; i < line.qty; i++)
-                                    removeFromCart(p.id);
-                                }}
+                                onClick={() => removeFromCart(p.id)}
                                 className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-gray-400 transition hover:bg-gray-200 hover:text-gray-700"
                               >
                                 <Trash2 size={15} />
@@ -221,10 +223,10 @@ export default function CartDrawer() {
                             </div>
 
                             <div className="mt-1 flex items-baseline gap-2">
-                              {isHalfOff ? (
+                              {item.isHalfOff ? (
                                 <>
                                   <span className="text-sm font-bold text-gray-900">
-                                    ₹{Math.round(p.price * 0.5)}
+                                    ₹{unitPrice}
                                   </span>
                                   <span className="text-xs text-gray-400 line-through">
                                     ₹{p.price}
@@ -252,28 +254,9 @@ export default function CartDrawer() {
                               )}
                             </div>
 
-                            <div className="mt-auto flex items-center justify-between pt-2">
-                              <div className="flex items-center gap-2 rounded-md ring-1 ring-gray-200">
-                                <button
-                                  aria-label="Decrease"
-                                  onClick={() => removeFromCart(p.id)}
-                                  className="grid h-7 w-7 place-items-center rounded-md text-gray-700 transition hover:bg-gray-100"
-                                >
-                                  <Minus size={13} />
-                                </button>
-                                <span className="min-w-[16px] text-center text-sm font-semibold">
-                                  {line.qty}
-                                </span>
-                                <button
-                                  aria-label="Increase"
-                                  onClick={() => addToCart(p)}
-                                  className="grid h-7 w-7 place-items-center rounded-md text-gray-700 transition hover:bg-gray-100"
-                                >
-                                  <Plus size={13} />
-                                </button>
-                              </div>
+                            <div className="mt-auto flex items-center justify-end pt-2">
                               <span className="text-sm font-bold text-gray-900">
-                                ₹{lineTotal}
+                                ₹{unitPrice}
                               </span>
                             </div>
                           </div>

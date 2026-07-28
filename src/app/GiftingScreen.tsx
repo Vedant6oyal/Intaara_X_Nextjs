@@ -42,6 +42,10 @@ export default function GiftingScreen({
   const [categoryRestored, setCategoryRestored] = useState(false);
   const selectCategory = (category: string | null) => {
     setActiveCategory(category);
+    trackEvent("category_selected", {
+      screen: "gifting",
+      category: category ?? "all",
+    });
     if (category) window.sessionStorage.setItem("gifting:category", category);
     else window.sessionStorage.removeItem("gifting:category");
   };

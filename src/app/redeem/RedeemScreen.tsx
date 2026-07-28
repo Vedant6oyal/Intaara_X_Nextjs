@@ -55,8 +55,9 @@ export default function RedeemScreen({
 
   const discountUnlocked = cartCount === 1;
 
-  // 50% off on the second distinct product (1 unit only).
-  const discountAmount = cart.length >= 2 ? Math.round(cart[1].product.price * 0.5) : 0;
+  // 50% off on the second unit in the cart (same product or different).
+  const flatPrices = cart.flatMap((l) => Array(l.qty).fill(l.product.price));
+  const discountAmount = flatPrices.length >= 2 ? Math.round(flatPrices[1] * 0.5) : 0;
   const displayTotal = cartTotal - discountAmount;
 
   // Per-category scroll position preservation.
@@ -66,6 +67,10 @@ export default function RedeemScreen({
   const switchCategory = (cat: string | null) => {
     scrollPositions.current[activeCategory ?? "__all"] = window.scrollY;
     setActiveCategory(cat);
+    trackEvent("category_selected", {
+      screen: "redeem",
+      category: cat ?? "all",
+    });
     if (cat) window.sessionStorage.setItem("redeem:category", cat);
     else window.sessionStorage.removeItem("redeem:category");
   };

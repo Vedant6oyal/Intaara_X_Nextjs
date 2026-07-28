@@ -16,6 +16,7 @@ const EVENT_NAMES = new Set([
   "second_gift_unlocked",
   "checkout_started",
   "checkout_opened",
+  "category_selected",
 ]);
 
 const ATTRIBUTION_KEYS = [

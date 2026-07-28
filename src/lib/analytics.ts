@@ -13,6 +13,7 @@ export const ANALYTICS_EVENT_NAMES = [
   "second_gift_unlocked",
   "checkout_started",
   "checkout_opened",
+  "category_selected",
 ] as const;
 
 export type AnalyticsEventName = (typeof ANALYTICS_EVENT_NAMES)[number];
