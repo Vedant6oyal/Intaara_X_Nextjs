@@ -2,10 +2,14 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, claimAttributionToken } from "@/lib/analytics";
 
 export default function AnalyticsTracker() {
   const pathname = usePathname();
+
+  useEffect(() => {
+    claimAttributionToken();
+  }, []);
 
   useEffect(() => {
     trackEvent(pathname === "/" ? "landing_viewed" : "page_viewed", {

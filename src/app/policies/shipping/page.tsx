@@ -24,7 +24,7 @@ export default function ShippingPolicyPage() {
           As soon as your package is dispatched, we&rsquo;ll send you the
           tracking details via{" "}
           <strong className="font-semibold text-gray-800">
-            WhatsApp, email, and SMS
+            WhatsApp and an email via shiprocket
           </strong>{" "}
           so you can monitor its journey.
         </li>

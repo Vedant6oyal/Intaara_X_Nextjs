@@ -26,13 +26,13 @@ type Attribution = {
   utmCampaign: string | null;
   utmContent: string | null;
   utmTerm: string | null;
-  waName: string | null;
   waMobile: string | null;
 };
 
 const ANONYMOUS_ID_KEY = "intaara:analytics:anonymous-id";
 const SESSION_ID_KEY = "intaara:analytics:session-id";
 const ATTRIBUTION_KEY = "intaara:analytics:attribution";
+const CLAIMED_INF_KEY = "intaara:analytics:claimed-inf";
 
 function createId() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -49,44 +49,71 @@ function getOrCreate(storage: Storage, key: string) {
   return value;
 }
 
-function decodeInf(encoded: string): { name: string; mobile: string } {
-  try {
-    const base64 = encoded.replace(/-/g, "+").replace(/_/g, "/");
-    const combined = atob(base64);
-    const match = combined.match(/^([^\d]+)(\d+)$/);
-    if (!match) return { name: combined, mobile: "" };
-    return { name: match[1], mobile: match[2] };
-  } catch {
-    return { name: "", mobile: "" };
-  }
-}
-
 function readAttribution(): Attribution {
-  const stored = window.localStorage.getItem(ATTRIBUTION_KEY);
-  if (stored) {
-    try {
-      return JSON.parse(stored) as Attribution;
-    } catch {
-      window.localStorage.removeItem(ATTRIBUTION_KEY);
-    }
-  }
-
   const params = new URLSearchParams(window.location.search);
-  const inf = params.get("inf");
-  const decoded = inf ? decodeInf(inf) : { name: "", mobile: "" };
   const mobileFallback = params.get("mobile");
-  const attribution: Attribution = {
+
+  const newAttribution: Attribution = {
     referralToken: params.get("ref") ?? params.get("invite"),
     utmSource: params.get("utm_source"),
     utmMedium: params.get("utm_medium"),
     utmCampaign: params.get("utm_campaign"),
     utmContent: params.get("utm_content"),
     utmTerm: params.get("utm_term"),
-    waName: decoded.name || null,
-    waMobile: decoded.mobile || mobileFallback || null,
+    waMobile: mobileFallback || null,
   };
-  window.localStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(attribution));
-  return attribution;
+
+  const stored = window.localStorage.getItem(ATTRIBUTION_KEY);
+  if (stored) {
+    try {
+      const prev = JSON.parse(stored) as Attribution;
+      const merged: Attribution = {
+        referralToken: newAttribution.referralToken ?? prev.referralToken,
+        utmSource: newAttribution.utmSource ?? prev.utmSource,
+        utmMedium: newAttribution.utmMedium ?? prev.utmMedium,
+        utmCampaign: newAttribution.utmCampaign ?? prev.utmCampaign,
+        utmContent: newAttribution.utmContent ?? prev.utmContent,
+        utmTerm: newAttribution.utmTerm ?? prev.utmTerm,
+        waMobile: newAttribution.waMobile ?? prev.waMobile,
+      };
+      window.localStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(merged));
+      return merged;
+    } catch {
+      window.localStorage.removeItem(ATTRIBUTION_KEY);
+    }
+  }
+
+  window.localStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(newAttribution));
+  return newAttribution;
+}
+
+// Forwards the raw HMAC-signed `inf` token (if present in the URL and not
+// already claimed) to the server for verification. The server alone holds
+// HMAC_SECRET and decides whether to write wa_name/wa_mobile. Safe to call
+// on every page load — it no-ops once the token has been claimed.
+export function claimAttributionToken() {
+  if (typeof window === "undefined") return;
+
+  const params = new URLSearchParams(window.location.search);
+  const token = params.get("inf");
+  if (!token) return;
+
+  const claimed = window.localStorage.getItem(CLAIMED_INF_KEY);
+  if (claimed === token) return;
+
+  const anonymousId = getOrCreate(window.localStorage, ANONYMOUS_ID_KEY);
+
+  void fetch("/api/attribution/claim", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    keepalive: true,
+    body: JSON.stringify({ anonymousId, token }),
+  })
+    .then(() => {
+      window.localStorage.setItem(CLAIMED_INF_KEY, token);
+    })
+    .catch(() => {
+    });
 }
 
 export function getAnonymousId() {

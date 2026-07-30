@@ -26,7 +26,6 @@ const ATTRIBUTION_KEYS = [
   "utmCampaign",
   "utmContent",
   "utmTerm",
-  "waName",
   "waMobile",
 ] as const;
 
@@ -123,23 +122,41 @@ export async function POST(req: Request) {
     return new NextResponse(null, { status: 500 });
   }
 
-  await supabase.from("main_analytics_visitors").upsert(
-    {
-      anonymous_id: body.anonymousId,
-      last_seen_at: new Date().toISOString(),
-      first_referral_token: body.attribution.referralToken,
-      wa_mobile: body.attribution.waMobile,
-      wa_name: body.attribution.waName,
-      first_utm_properties: {
-        source: body.attribution.utmSource,
-        medium: body.attribution.utmMedium,
-        campaign: body.attribution.utmCampaign,
-        content: body.attribution.utmContent,
-        term: body.attribution.utmTerm,
-      },
+  const visitorRow = {
+    anonymous_id: body.anonymousId,
+    last_seen_at: new Date().toISOString(),
+    first_referral_token: body.attribution.referralToken,
+    wa_mobile: body.attribution.waMobile,
+    first_utm_properties: {
+      source: body.attribution.utmSource,
+      medium: body.attribution.utmMedium,
+      campaign: body.attribution.utmCampaign,
+      content: body.attribution.utmContent,
+      term: body.attribution.utmTerm,
     },
-    { onConflict: "anonymous_id", ignoreDuplicates: true }
-  );
+  };
+
+  const { error: insertError } = await supabase
+    .from("main_analytics_visitors")
+    .insert(visitorRow);
+
+  if (insertError && insertError.code === "23505") {
+    // Conflict — row already exists.
+    // Always update last_seen_at.
+    await supabase
+      .from("main_analytics_visitors")
+      .update({ last_seen_at: new Date().toISOString() })
+      .eq("anonymous_id", body.anonymousId);
+
+    // Only set wa_mobile if it's currently null and we have a new value.
+    if (body.attribution.waMobile) {
+      await supabase
+        .from("main_analytics_visitors")
+        .update({ wa_mobile: body.attribution.waMobile })
+        .eq("anonymous_id", body.anonymousId)
+        .is("wa_mobile", null);
+    }
+  }
 
   return new NextResponse(null, { status: 204 });
 }
