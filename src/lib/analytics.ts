@@ -26,6 +26,8 @@ type Attribution = {
   utmCampaign: string | null;
   utmContent: string | null;
   utmTerm: string | null;
+  waName: string | null;
+  waMobile: string | null;
 };
 
 const ANONYMOUS_ID_KEY = "intaara:analytics:anonymous-id";
@@ -47,6 +49,18 @@ function getOrCreate(storage: Storage, key: string) {
   return value;
 }
 
+function decodeInf(encoded: string): { name: string; mobile: string } {
+  try {
+    const base64 = encoded.replace(/-/g, "+").replace(/_/g, "/");
+    const combined = atob(base64);
+    const match = combined.match(/^([^\d]+)(\d+)$/);
+    if (!match) return { name: combined, mobile: "" };
+    return { name: match[1], mobile: match[2] };
+  } catch {
+    return { name: "", mobile: "" };
+  }
+}
+
 function readAttribution(): Attribution {
   const stored = window.localStorage.getItem(ATTRIBUTION_KEY);
   if (stored) {
@@ -58,6 +72,9 @@ function readAttribution(): Attribution {
   }
 
   const params = new URLSearchParams(window.location.search);
+  const inf = params.get("inf");
+  const decoded = inf ? decodeInf(inf) : { name: "", mobile: "" };
+  const mobileFallback = params.get("mobile");
   const attribution: Attribution = {
     referralToken: params.get("ref") ?? params.get("invite"),
     utmSource: params.get("utm_source"),
@@ -65,6 +82,8 @@ function readAttribution(): Attribution {
     utmCampaign: params.get("utm_campaign"),
     utmContent: params.get("utm_content"),
     utmTerm: params.get("utm_term"),
+    waName: decoded.name || null,
+    waMobile: decoded.mobile || mobileFallback || null,
   };
   window.localStorage.setItem(ATTRIBUTION_KEY, JSON.stringify(attribution));
   return attribution;

@@ -26,6 +26,8 @@ const ATTRIBUTION_KEYS = [
   "utmCampaign",
   "utmContent",
   "utmTerm",
+  "waName",
+  "waMobile",
 ] as const;
 
 type Attribution = Record<(typeof ATTRIBUTION_KEYS)[number], string | null>;
@@ -126,6 +128,8 @@ export async function POST(req: Request) {
       anonymous_id: body.anonymousId,
       last_seen_at: new Date().toISOString(),
       first_referral_token: body.attribution.referralToken,
+      wa_mobile: body.attribution.waMobile,
+      wa_name: body.attribution.waName,
       first_utm_properties: {
         source: body.attribution.utmSource,
         medium: body.attribution.utmMedium,
