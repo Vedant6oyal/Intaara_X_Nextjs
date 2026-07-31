@@ -70,7 +70,7 @@ export async function POST(req: Request) {
   }
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-    return new NextResponse(null, { status: 204 });
+    return NextResponse.json({ name: decoded.name || null }, { status: 200 });
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
@@ -102,5 +102,7 @@ export async function POST(req: Request) {
     }
   }
 
-  return new NextResponse(null, { status: 204 });
+  // Return decoded name so the client can personalize share messages.
+  // Mobile is not returned to avoid exposing it unnecessarily.
+  return NextResponse.json({ name: decoded.name || null }, { status: 200 });
 }

@@ -12,7 +12,6 @@ const EVENT_NAMES = new Set([
   "redeem_product_removed",
   "second_gift_unlock_prompt_viewed",
   "share_cta_clicked",
-  "share_link_created",
   "second_gift_unlocked",
   "checkout_started",
   "checkout_opened",

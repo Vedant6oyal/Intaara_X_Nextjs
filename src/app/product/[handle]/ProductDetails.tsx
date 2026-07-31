@@ -362,7 +362,6 @@ export default function ProductDetails({
               if (!selected && giftsFull) return;
               if (!selected && gift2Locked) {
                 trackEvent("share_cta_clicked", { share_channel: "whatsapp", source: "product_details" });
-                trackEvent("share_link_created", { share_channel: "whatsapp", source: "product_details" });
                 unlockGift2();
                 const shareText = encodeURIComponent(
                   "Hey! I just unlocked a FREE gift from Intaara 🎁 You can grab yours too! Check it out: https://intaara.com"

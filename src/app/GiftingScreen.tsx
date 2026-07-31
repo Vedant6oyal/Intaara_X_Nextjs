@@ -11,7 +11,7 @@ import FeatureMarquee from "@/components/FeatureMarquee";
 import GiftProgressBar from "@/components/GiftProgressBar";
 import HeroCarousel from "@/components/HeroCarousel";
 import Celebration from "@/components/Celebration";
-import { trackEvent } from "@/lib/analytics";
+import { trackEvent, getWaName } from "@/lib/analytics";
 
 export default function GiftingScreen({
   products: initialProducts,
@@ -141,10 +141,11 @@ export default function GiftingScreen({
 
   function handleWhatsAppShare() {
     trackEvent("share_cta_clicked", { share_channel: "whatsapp" });
-    trackEvent("share_link_created", { share_channel: "whatsapp" });
     unlockGift2();
+    const waName = getWaName();
+    const nameSuffix = waName ? ` - ${waName}` : "";
     const shareText = encodeURIComponent(
-      "Hey! I am sharing with you an exclusive upto ₹1000 gift invite link from Intaara. Pick your favourite jewellery gift, I have already selected mine. \nCheck it out : https://wa.me/918076130691?text=Hi%20Intaara%2C%20I%20got%20Exclusive%20Invite%20IJ221"
+      `Hey! I am sharing with you an exclusive upto ₹1000 gift invite link from Intaara. Pick your favourite jewellery gift, I have already selected mine. \nCheck it out : https://wa.me/918076130691?text=Hi%20Intaara%2C%20I%20got%20Exclusive%20Invite%20INV1221%20From${encodeURIComponent(nameSuffix)}`
     );
     const a = document.createElement("a");
     a.href = `https://api.whatsapp.com/send?text=${shareText}`;

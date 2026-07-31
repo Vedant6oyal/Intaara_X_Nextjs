@@ -9,7 +9,6 @@ export const ANALYTICS_EVENT_NAMES = [
   "redeem_product_removed",
   "second_gift_unlock_prompt_viewed",
   "share_cta_clicked",
-  "share_link_created",
   "second_gift_unlocked",
   "checkout_started",
   "checkout_opened",
@@ -33,6 +32,7 @@ const ANONYMOUS_ID_KEY = "intaara:analytics:anonymous-id";
 const SESSION_ID_KEY = "intaara:analytics:session-id";
 const ATTRIBUTION_KEY = "intaara:analytics:attribution";
 const CLAIMED_INF_KEY = "intaara:analytics:claimed-inf";
+const WA_NAME_KEY = "intaara:analytics:wa-name";
 
 function createId() {
   if (typeof crypto !== "undefined" && crypto.randomUUID) {
@@ -109,11 +109,25 @@ export function claimAttributionToken() {
     keepalive: true,
     body: JSON.stringify({ anonymousId, token }),
   })
-    .then(() => {
+    .then(async (res) => {
       window.localStorage.setItem(CLAIMED_INF_KEY, token);
+      if (res.ok) {
+        try {
+          const data = await res.json();
+          if (data.name) {
+            window.localStorage.setItem(WA_NAME_KEY, data.name);
+          }
+        } catch {
+        }
+      }
     })
     .catch(() => {
     });
+}
+
+export function getWaName() {
+  if (typeof window === "undefined") return null;
+  return window.localStorage.getItem(WA_NAME_KEY);
 }
 
 export function getAnonymousId() {
