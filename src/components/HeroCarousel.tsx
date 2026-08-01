@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 
 const SLIDES = [
-  "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Hero_Carousel_1_alt.png",
+  "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/New_Hero_Carousel_1.png",
   "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Hareo_Carousel_2_alt.png",
   "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Hero_Carousel_3_alt_new.png"  
 ];
