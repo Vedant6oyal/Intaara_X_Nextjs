@@ -11,7 +11,7 @@ import React, {
 import { type Product } from "@/data/products";
 import { trackEvent } from "@/lib/analytics";
 
-const MAX_GIFTS = 2;
+const MAX_GIFTS = 1;
 const STORAGE_KEY = "giftbox-app:v1";
 
 type CartLine = { product: Product; qty: number };
@@ -78,7 +78,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   const [gifts, setGifts] = useState<Product[]>([]);
   const [cart, setCart] = useState<CartLine[]>([]);
   const [wishlist, setWishlist] = useState<Product[]>([]);
-  const [gift2Unlocked, setGift2Unlocked] = useState(false);
+  const [gift2Unlocked, setGift2Unlocked] = useState(true);
   const [hydrated, setHydrated] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
@@ -95,7 +95,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       // Trim any stale state saved when the gift limit was higher.
       setGifts(persisted.gifts.slice(0, MAX_GIFTS));
       setCart(persisted.cart);
-      if (persisted.gift2Unlocked) setGift2Unlocked(true);
+      // gift2 is always unlocked now — no share gate.
       if (persisted.wishlist) setWishlist(persisted.wishlist);
     }
     setHydrated(true);

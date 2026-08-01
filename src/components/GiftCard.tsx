@@ -2,26 +2,19 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Check, Plus, Share2, Star } from "lucide-react";
+import { Check, Plus, Star } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 import type { Product } from "@/data/products";
 
-export default function GiftCard({ product, onLockedClick }: { product: Product; onLockedClick?: () => void }) {
-  const { isGiftSelected, toggleGift, giftsFull, gift2Locked } = useAppStore();
+export default function GiftCard({ product }: { product: Product }) {
+  const { isGiftSelected, toggleGift, giftsFull } = useAppStore();
   const selected = isGiftSelected(product.id);
   const disabled = !selected && giftsFull;
-  const locked = !selected && gift2Locked;
   const saved = product.mrp ? product.mrp - product.price : 0;
   const href = product.handle ? `/product/${product.handle}` : "#";
   const saveScrollPosition = () => {
     window.sessionStorage.setItem("gifting:scroll", String(window.scrollY));
   };
-
-  function handleLockedClick() {
-    if (onLockedClick) {
-      onLockedClick();
-    }
-  }
 
   return (
     <div
@@ -86,10 +79,6 @@ export default function GiftCard({ product, onLockedClick }: { product: Product;
         <button
           onClick={() => {
             if (disabled) return;
-            if (locked) {
-              handleLockedClick();
-              return;
-            }
             toggleGift(product);
           }}
           disabled={disabled}
@@ -98,8 +87,6 @@ export default function GiftCard({ product, onLockedClick }: { product: Product;
               ? "bg-sage-600 text-white"
               : disabled
               ? "cursor-not-allowed bg-gray-100 text-gray-400"
-              : locked
-              ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
               : "bg-sage-100 text-sage-700 hover:bg-sage-200"
           }`}
         >
@@ -109,10 +96,6 @@ export default function GiftCard({ product, onLockedClick }: { product: Product;
             </>
           ) : disabled ? (
             "Box is full"
-          ) : locked ? (
-            <>
-              <Share2 size={15} /> Share to Unlock
-            </>
           ) : (
             <>
               <Plus size={16} /> Add Gift

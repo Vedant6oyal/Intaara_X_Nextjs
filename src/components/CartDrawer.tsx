@@ -93,7 +93,7 @@ export default function CartDrawer() {
 
     setLoading(true);
     try {
-      const coupon = gifts.length >= 1 && cartCount === 2
+      const coupon = gifts.length >= 1 && cartCount >= 2
         ? "50%DISCOUNTEXTRA"
         : gifts.length === 2 && cartCount >= 1
           ? "INVITEONLYFIRSTFREE"

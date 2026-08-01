@@ -2,19 +2,15 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { Check, Gift, Lock, X } from "lucide-react";
+import { Check, Gift, X } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 import { useCountUp } from "@/hooks/useCountUp";
 
-const MAX_SLOTS = 2;
 const SHOW_AFTER_PX = 80;
 
 export default function GiftProgressBar() {
-  const { gifts, giftTotal, toggleGift, gift2Locked } = useAppStore();
-  const filledCount = Math.min(gifts.length, MAX_SLOTS);
-
-  // 0 → 0%, 1 → 50%, 2 → 100% (clamped so stale state can't overflow)
-  const progressPct = Math.min((filledCount / MAX_SLOTS) * 100, 100);
+  const { gifts, giftTotal, toggleGift } = useAppStore();
+  const filledCount = gifts.length;
 
   // Animated total — re-counts whenever the total changes.
   const animatedTotal = useCountUp(giftTotal, giftTotal, 600);
@@ -57,80 +53,55 @@ export default function GiftProgressBar() {
           </div>
         ) : (
           <div className="text-[11px] font-medium text-gray-400">
-            Pick {MAX_SLOTS} to unlock
+            Pick your free gift
           </div>
         )}
       </div>
 
-      {/* Stepper: line + 2 circles. Circles are centered at 25% and 75% via
-          justify-around, so the track runs exactly from 25% → 75% and the fill
-          covers (50% × progress). Track sits at top-6 = circle center (h-12). */}
-      <div className="relative">
-        {/* Track (background) */}
-        <div className="absolute left-1/4 right-1/4 top-6 h-1 -translate-y-1/2 rounded-full bg-sage-100" />
-        {/* Track (filled) */}
-        <div
-          className="absolute left-1/4 top-6 h-1 -translate-y-1/2 rounded-full bg-sage-600 transition-[width] duration-500 ease-out"
-          style={{ width: `${(progressPct / 100) * 50}%` }}
-        />
-
-        <div className="relative flex items-start justify-around">
-          {Array.from({ length: MAX_SLOTS }).map((_, i) => {
-            const reached = filledCount > i;
-            const product = gifts[i];
-            const isLockedSlot = i === 1 && gift2Locked;
-            return (
-              <div key={i} className="flex flex-col items-center gap-1.5">
-                <div
-                  className={`relative grid h-12 w-12 place-items-center rounded-full transition ${
-                    reached
-                      ? "bg-sage-600 text-white shadow-md ring-4 ring-cream animate-pop"
-                      : isLockedSlot
-                      ? "bg-amber-50 text-amber-600 ring-2 ring-dashed ring-amber-300"
-                      : "bg-white text-sage-400 ring-2 ring-dashed ring-sage-300"
-                  }`}
-                  aria-label={
-                    reached ? `Gift ${i + 1}: ${product?.name}` : `Gift ${i + 1} empty`
-                  }
-                >
-                  {reached && product ? (
-                    <>
-                      <div className="absolute inset-0 overflow-hidden rounded-full">
-                        <Image
-                          src={product.image}
-                          alt={product.name}
-                          fill
-                          sizes="48px"
-                          className="object-cover"
-                        />
-                      </div>
-                      <span className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full bg-sage-600 text-white ring-2 ring-cream">
-                        <Check size={10} strokeWidth={3} />
-                      </span>
-                      <button
-                        aria-label={`Remove ${product.name}`}
-                        onClick={() => toggleGift(product)}
-                        className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-white text-gray-500 shadow ring-1 ring-black/10"
-                      >
-                        <X size={11} strokeWidth={3} />
-                      </button>
-                    </>
-                  ) : isLockedSlot ? (
-                    <Lock size={16} />
-                  ) : (
-                    <span className="text-sm font-bold">{i + 1}</span>
-                  )}
+      {/* Single centered gift slot */}
+      <div className="relative flex items-start justify-center">
+        <div className="flex flex-col items-center gap-1.5">
+          <div
+            className={`relative grid h-12 w-12 place-items-center rounded-full transition ${
+              filledCount > 0
+                ? "bg-sage-600 text-white shadow-md ring-4 ring-cream animate-pop"
+                : "bg-white text-sage-400 ring-2 ring-dashed ring-sage-300"
+            }`}
+            aria-label={filledCount > 0 ? `Gift 1: ${gifts[0]?.name}` : "Gift 1 empty"}
+          >
+            {filledCount > 0 && gifts[0] ? (
+              <>
+                <div className="absolute inset-0 overflow-hidden rounded-full">
+                  <Image
+                    src={gifts[0].image}
+                    alt={gifts[0].name}
+                    fill
+                    sizes="48px"
+                    className="object-cover"
+                  />
                 </div>
-                <span
-                  className={`text-[10px] font-semibold uppercase tracking-wider ${
-                    reached ? "text-sage-700" : "text-gray-400"
-                  }`}
-                >
-                  Gift {i + 1}
+                <span className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full bg-sage-600 text-white ring-2 ring-cream">
+                  <Check size={10} strokeWidth={3} />
                 </span>
-              </div>
-            );
-          })}
+                <button
+                  aria-label={`Remove ${gifts[0].name}`}
+                  onClick={() => toggleGift(gifts[0])}
+                  className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-white text-gray-500 shadow ring-1 ring-black/10"
+                >
+                  <X size={11} strokeWidth={3} />
+                </button>
+              </>
+            ) : (
+              <span className="text-sm font-bold">1</span>
+            )}
+          </div>
+          <span
+            className={`text-[10px] font-semibold uppercase tracking-wider ${
+              filledCount > 0 ? "text-sage-700" : "text-gray-400"
+            }`}
+          >
+            Gift 1
+          </span>
         </div>
       </div>
 

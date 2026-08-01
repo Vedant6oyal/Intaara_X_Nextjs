@@ -1,7 +1,7 @@
 "use client";
 
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, Gift, Loader2, PartyPopper, RefreshCw, Share2, Sparkles } from "lucide-react";
+import { ArrowRight, Gift, Loader2, PartyPopper, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import type { Category, Product } from "@/data/products";
 import { useAppStore } from "@/store/AppStore";
@@ -11,7 +11,7 @@ import FeatureMarquee from "@/components/FeatureMarquee";
 import GiftProgressBar from "@/components/GiftProgressBar";
 import HeroCarousel from "@/components/HeroCarousel";
 import Celebration from "@/components/Celebration";
-import { trackEvent, getWaName } from "@/lib/analytics";
+import { trackEvent } from "@/lib/analytics";
 
 export default function GiftingScreen({
   products: initialProducts,
@@ -24,10 +24,8 @@ export default function GiftingScreen({
   endCursor: string | null;
   categories: Category[];
 }) {
-  const { gifts, giftTotal, giftsFull, hydrated, gift2Unlocked, unlockGift2 } = useAppStore();
+  const { gifts, giftTotal, hydrated, gift2Unlocked } = useAppStore();
   const [showPopup, setShowPopup] = useState(false);
-  const [showSharePopup, setShowSharePopup] = useState(false);
-  const [showWelcome, setShowWelcome] = useState(false);
   const [showUnlockedPopup, setShowUnlockedPopup] = useState(false);
 
   // Infinite scroll state
@@ -75,53 +73,15 @@ export default function GiftingScreen({
     });
   }, [categoryRestored, filteredProducts.length]);
 
-  // First-visit welcome popup — shows once, then never again.
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const seen = window.localStorage.getItem("giftbox-app:welcomeSeen");
-    if (!seen) {
-      const timer = setTimeout(() => setShowWelcome(true), 800);
-      return () => clearTimeout(timer);
-    }
-  }, []);
-
-  function handleWelcomeDismiss() {
-    window.localStorage.setItem("giftbox-app:welcomeSeen", "1");
-    setShowWelcome(false);
-    const el = document.getElementById("pick-gifts");
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
-
-  // Only fire when the box *transitions* from not-full → full after hydration.
-  // Prevents re-showing on every page load when the user already has 2 gifts.
-  const prevFull = useRef<boolean | null>(null);
-  useEffect(() => {
-    if (!hydrated) return;
-    if (prevFull.current === false && giftsFull) {
-      setShowPopup(true);
-    }
-    prevFull.current = giftsFull;
-  }, [giftsFull, hydrated]);
-
-  // Fire share popup when the first gift is added (and 2nd is still locked).
+  // Show redeem popup as soon as the user selects their first gift.
   const prevGiftCount = useRef<number | null>(null);
   useEffect(() => {
     if (!hydrated) return;
-    // Check if the share popup was requested from another screen (e.g. ProductDetails).
-    if (typeof window !== "undefined") {
-      const flag = window.sessionStorage.getItem("gift:showSharePopup");
-      if (flag === "1" && gifts.length === 1 && !gift2Unlocked) {
-        trackEvent("second_gift_unlock_prompt_viewed", { source: "product_details" });
-        setShowSharePopup(true);
-        window.sessionStorage.removeItem("gift:showSharePopup");
-      }
-    }
-    if (prevGiftCount.current === 0 && gifts.length === 1 && !gift2Unlocked) {
-      trackEvent("second_gift_unlock_prompt_viewed", { source: "gifting_screen" });
-      setShowSharePopup(true);
+    if (prevGiftCount.current === 0 && gifts.length === 1) {
+      setShowPopup(true);
     }
     prevGiftCount.current = gifts.length;
-  }, [gifts.length, hydrated, gift2Unlocked]);
+  }, [gifts.length, hydrated]);
 
   // Detect when gift2 gets unlocked (e.g. user returns from WhatsApp share).
   // Show a confetti popup celebrating the unlock — delayed 1s so the user
@@ -138,24 +98,6 @@ export default function GiftingScreen({
 
   // Animated total inside the popup; restarts when popup opens.
   const popupTotal = useCountUp(giftTotal, showPopup, 900);
-
-  function handleWhatsAppShare() {
-    trackEvent("share_cta_clicked", { share_channel: "whatsapp" });
-    unlockGift2();
-    const waName = getWaName();
-    const nameSuffix = waName ? ` - ${waName}` : "";
-    const shareText = encodeURIComponent(
-      `Hey! I am sharing with you an exclusive upto ₹1000 gift invite link from Intaara. Pick your favourite jewellery gift, I have already selected mine. \nCheck it out : https://wa.me/918076130691?text=Hi%20Intaara%2C%20I%20got%20Exclusive%20Invite%20INV1221%20From${encodeURIComponent(nameSuffix)}`
-    );
-    const a = document.createElement("a");
-    a.href = `https://api.whatsapp.com/send?text=${shareText}`;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setShowSharePopup(false);
-  }
 
   // Infinite scroll: load more products when sentinel enters viewport.
   // Use a ref to hold the latest pagination state so the IntersectionObserver
@@ -196,39 +138,7 @@ export default function GiftingScreen({
 
   return (
     <div className="pb-28">
-      <Celebration show={showSharePopup || showUnlockedPopup} />
-
-      {showWelcome && (
-        <div className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50 px-6 animate-fade-in">
-          <div className="relative w-full max-w-sm animate-pop overflow-hidden rounded-2xl bg-white p-6 text-center shadow-2xl">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-sage-500 via-terracotta-400 to-sage-500" />
-            <div className="mb-4 flex items-center justify-center">
-              <span className="grid h-16 w-16 shrink-0 place-items-center rounded-full bg-sage-100 text-3xl">
-                🥳
-              </span>
-            </div>
-
-            <div className="mb-1 flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-terracotta-500">
-              <Sparkles size={12} /> Invite Only <Sparkles size={12} />
-            </div>
-
-            <h3 className="text-lg font-bold tracking-wide text-sage-800">
-              INVITE ONLY COUPON APPLIED
-            </h3>
-            <p className="mt-2 text-sm leading-relaxed text-gray-600">
-              Invite only coupon for first customer is applied. Please pick a{" "}
-              <span className="font-semibold text-sage-700">free gift.</span>{" "}
-            </p>
-
-            <button
-              onClick={handleWelcomeDismiss}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-terracotta-500 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-terracotta-600"
-            >
-              Choose My Free Gift <ArrowRight size={16} />
-            </button>
-          </div>
-        </div>
-      )}
+      <Celebration show={showUnlockedPopup} />
 
       {showUnlockedPopup && (
         <div
@@ -254,42 +164,6 @@ export default function GiftingScreen({
               className="relative mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-sage-700 py-3 text-sm font-bold text-white shadow-md transition hover:bg-sage-800"
             >
               Pick My 2nd Gift <ArrowRight size={16} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {showSharePopup && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6 animate-fade-in"
-          onClick={() => setShowSharePopup(false)}
-        >
-          <div
-            className="relative w-full max-w-sm animate-pop overflow-hidden rounded-2xl bg-white p-6 text-center shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <span className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-full bg-sage-100">
-              <Gift size={28} className="text-sage-700" />
-            </span>
-            <h3 className="text-xl font-bold tracking-wide text-sage-800">
-              You've unlocked a 2nd gift 🥳!
-            </h3>
-            <p className="mt-2 text-sm text-gray-600">
-              Share this <span className="font-semibold text-terracotta-500">FREE GIFT INVITE</span> with at least <span className="font-semibold text-terracotta-500"> 3 of your friends </span> to claim your second free gift.
-            </p>
-
-            <button
-              onClick={handleWhatsAppShare}
-              className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] py-3 text-sm font-bold text-white shadow-lg transition hover:bg-[#1da851]"
-            >
-              <Share2 size={18} /> Share on WhatsApp
-            </button>
-
-            <button
-              onClick={() => setShowSharePopup(false)}
-              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-sage-100 py-3 text-sm font-semibold text-sage-700 transition hover:bg-sage-200"
-            >
-              Maybe later
             </button>
           </div>
         </div>
@@ -361,9 +235,9 @@ export default function GiftingScreen({
       <section className="px-4 pt-4">
       
         <div className="mt-4 rounded-2xl bg-sage-50 p-4 text-sm leading-relaxed text-gray-700 ring-1 ring-black/5">
-          <Step n={1} text="Pick the free gifts you love 💝" />
-          <Step n={2} text="Add them to your gift box 🎁" />
-          <Step n={3} text="Get them free on your first purchase 🛍️" />
+          <Step n={1} text="Pick the free gift you love 💝" />
+          <Step n={2} text="Add it to your gift box 🎁" />
+          <Step n={3} text="Get it free on your first purchase 🛍️" />
         </div>
       </section>
 
@@ -402,7 +276,7 @@ export default function GiftingScreen({
 
       <section id="pick-gifts" className="px-4 pt-5">
         <div className="mb-3 flex items-end justify-between">
-          <h2 className="text-lg font-bold text-gray-800">Pick your free gifts</h2>
+          <h2 className="text-lg font-bold text-gray-800">Pick your free gift</h2>
           <span className="text-xs text-gray-400">All free with purchase</span>
         </div>
         {products.length === 0 ? (
@@ -439,7 +313,7 @@ export default function GiftingScreen({
             <div className="grid grid-cols-2 gap-3">
               {filteredProducts.map((p, i) => (
                 <Fragment key={p.id}>
-                  <GiftCard product={p} onLockedClick={() => setShowSharePopup(true)} />
+                  <GiftCard product={p} />
                   {(i + 1) % 4 === 0 && i < filteredProducts.length - 1 && (
                     <div className="col-span-2 -mx-4 my-1">
                       <FeatureMarquee />
