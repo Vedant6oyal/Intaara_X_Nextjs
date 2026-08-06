@@ -15,11 +15,8 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 import { useCountUp } from "@/hooks/useCountUp";
-import { trackEvent, getAnonymousId } from "@/lib/analytics";
-import {
-  SHIPROCKET_COUPON_CODE,
-  toNumericVariantId,
-} from "@/lib/shiprocket";
+import { trackEvent } from "@/lib/analytics";
+import WaitingScreen from "@/components/WaitingScreen";
 
 export default function CartDrawer() {
   const {
@@ -38,6 +35,7 @@ export default function CartDrawer() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showWaiting, setShowWaiting] = useState(false);
 
   const expandedItems = useMemo(() => {
     const items: { product: typeof cart[number]["product"]; isHalfOff: boolean }[] = [];
@@ -66,68 +64,21 @@ export default function CartDrawer() {
   function handleCheckout() {
     setError(null);
 
-    const products = [
-      ...cart
-        .filter((l) => l.product.variantId)
-        .map((l) => ({
-          variantId: toNumericVariantId(l.product.variantId as string),
-          quantity: l.qty,
-        })),
-      ...gifts
-        .filter((g) => g.variantId)
-        .map((g) => ({
-          variantId: toNumericVariantId(g.variantId as string),
-          quantity: 1,
-        })),
-    ];
-
-    if (products.length === 0) {
+    if (cart.length === 0) {
       setError("Nothing in your cart to checkout.");
       return;
     }
 
-    if (typeof window === "undefined" || !window.shiprocketCheckoutEvents) {
-      setError("Checkout is still loading — please try again in a moment.");
-      return;
-    }
-
     setLoading(true);
-    try {
-      const coupon = gifts.length >= 1 && cartCount === 2
-        ? "50%DISCOUNTEXTRA"
-        : gifts.length === 2 && cartCount >= 1
-          ? "INVITEONLYFIRSTFREE"
-          : SHIPROCKET_COUPON_CODE;
-
-      trackEvent("checkout_started", {
-        gift_count: gifts.length,
-        redeem_item_count: cartCount,
-        cart_value: cartTotal,
-        coupon_code: coupon ?? null,
-      });
-      window.shiprocketCheckoutEvents!.buyDirect({
-        type: "cart",
-        products,
-        ...(coupon ? { couponCode: coupon } : {}),
-        cartAttributes: {
-          ...(gifts.length > 0
-            ? { free_gifts: gifts.map((g) => g.name).join(", ") }
-            : {}),
-          anonymous_id: getAnonymousId(),
-        },
-      });
-      trackEvent("checkout_opened", {
-        gift_count: gifts.length,
-        redeem_item_count: cartCount,
-        cart_value: cartTotal,
-        coupon_code: coupon ?? null,
-      });
-      closeCart();
-      setTimeout(() => setLoading(false), 2000);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Checkout failed");
+    trackEvent("checkout_started", {
+      gift_count: gifts.length,
+      redeem_item_count: cartCount,
+      cart_value: cartTotal,
+    });
+    setTimeout(() => {
       setLoading(false);
-    }
+      setShowWaiting(true);
+    }, 500);
   }
 
   return (
@@ -374,6 +325,9 @@ export default function CartDrawer() {
           )}
         </Dialog.Content>
       </Dialog.Portal>
+      {showWaiting && (
+        <WaitingScreen onClose={() => setShowWaiting(false)} />
+      )}
     </Dialog.Root>
   );
 }

@@ -157,11 +157,13 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
 
   const addToCart = useCallback((p: Product) => {
     const currentQuantity = cart.find((line) => line.product.id === p.id)?.qty ?? 0;
+    const cartCountAfter = cart.reduce((s, l) => s + l.qty, 0) + 1;
     trackEvent("redeem_product_added", {
       product_id: p.id,
       product_name: p.name,
       product_price: p.price,
       quantity_after: currentQuantity + 1,
+      cart_count_after: cartCountAfter,
     });
     setCart((prev) => {
       const found = prev.find((line) => line.product.id === p.id);
@@ -176,10 +178,12 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   const removeFromCart = useCallback((id: string) => {
     const line = cart.find((item) => item.product.id === id);
     if (line) {
+      const cartCountAfter = cart.reduce((s, l) => s + l.qty, 0) - 1;
       trackEvent("redeem_product_removed", {
         product_id: line.product.id,
         product_name: line.product.name,
         quantity_after: line.qty - 1,
+        cart_count_after: Math.max(cartCountAfter, 0),
       });
     }
     setCart((prev) =>
