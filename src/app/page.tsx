@@ -11,7 +11,7 @@ export default async function GiftingPage() {
     products = await getAllGiftProducts();
     categories = await getShopCollections(products);
   } catch (err) {
-    console.error("Failed to load gift products from Shopify:", err);
+    console.error("Fail to load gift products from Shopify:", err);
   }
   return (
     <GiftingScreen
