@@ -323,7 +323,12 @@ export default function ProductDetails({
           </Accordion>
           <Accordion icon={<Truck size={16} />} title="Returns & Exchanges">
             <ul className="space-y-1.5 text-sm leading-relaxed text-gray-600">
-              
+              <li>14-day exchange for damaged, wrong, or size issues (non-adjustable rings only).</li>
+              <li>Unboxing video required within 48 hours of delivery for any claim.</li>
+              <li>Exchanges allowed only once per order.</li>
+              <li>Complimentary gifts must be returned with the order as our gifts are crafted of exactly same premium quality.</li>
+              <li>No cancellations once the order is placed.</li>
+              <li>Please read our <Link href="/policies/returns" className="text-sage-700 underline underline-offset-2 hover:text-sage-800">returns and exchange policy</Link> for further details.</li>
             </ul>
           </Accordion>
         </div>

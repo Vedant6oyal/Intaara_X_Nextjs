@@ -8,11 +8,25 @@ export default function ReturnsPage() {
       {/* Highlighted notice box */}
       <div className="rounded-lg border-2 border-gray-900 p-5">
         <p className="text-base font-semibold leading-relaxed text-gray-900">
-          An unboxing video must be shared within 24 hours of delivery for any
+          An unboxing video must be shared within 48 hours of delivery for any
           issue to be considered. Without it, we will not be able to process
           your request.
         </p>
       </div>
+
+      <h2 className="pt-4 text-base font-semibold text-gray-900">
+        Return Conditions
+      </h2>
+      <ul className="space-y-2 pl-1">
+        <li>
+          Items must be unused, with original packaging and tags intact.
+        </li>
+        <li>
+          An unboxing video is required to process any claims for missing items
+          in your order. Please ensure you record the package being opened from
+          the sealed state for your claim to be considered.
+        </li>
+      </ul>
 
       <h2 className="pt-4 text-base font-semibold text-gray-900">
         14-Day Easy Exchange Policy
@@ -137,14 +151,6 @@ export default function ReturnsPage() {
         permitted.
       </p>
 
-      <h3 className="pt-2 text-sm font-semibold text-gray-800">
-        3. Customized &amp; Personalized Products
-      </h3>
-      <p>
-        Any customized or personalized products are non-cancellable,
-        non-returnable, and non-refundable once the order has been confirmed.
-      </p>
-
       <h2 className="pt-4 text-base font-semibold text-gray-900">Contact Us</h2>
       <p>
         If you have any further questions regarding your order, please contact
@@ -162,7 +168,7 @@ export default function ReturnsPage() {
       <p>We&rsquo;ll be happy to assist you.</p>
 
       <p className="text-sm font-medium text-gray-500">
-        *Please Note: An unboxing video must be shared within 24 hours of
+        *Please Note: An unboxing video must be shared within 48 hours of
         delivery for any issue related to damaged, incorrect, or missing
         products. Requests received without an unboxing video may not be
         eligible for exchange or resolution.
