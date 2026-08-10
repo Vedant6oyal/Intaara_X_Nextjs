@@ -10,6 +10,7 @@ import CategoryStrip from "@/components/CategoryStrip";
 import ProductCard from "@/components/ProductCard";
 import { trackEvent } from "@/lib/analytics";
 import FeatureMarquee from "@/components/FeatureMarquee";
+import QualityShowcaseBlock from "@/components/QualityShowcaseBlock";
 import Celebration from "@/components/Celebration";
 
 export default function RedeemScreen({
@@ -374,6 +375,11 @@ export default function RedeemScreen({
                 {(i + 1) % 4 === 0 && i < filtered.length - 1 && (
                   <div className="col-span-2 -mx-4 my-1">
                     <FeatureMarquee />
+                  </div>
+                )}
+                {i + 1 === 8 && i < filtered.length - 1 && (
+                  <div className="col-span-2 my-2">
+                    <QualityShowcaseBlock />
                   </div>
                 )}
               </Fragment>

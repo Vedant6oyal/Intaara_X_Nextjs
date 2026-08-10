@@ -8,6 +8,7 @@ import { useAppStore } from "@/store/AppStore";
 import { useCountUp } from "@/hooks/useCountUp";
 import GiftCard from "@/components/GiftCard";
 import FeatureMarquee from "@/components/FeatureMarquee";
+import QualityShowcaseBlock from "@/components/QualityShowcaseBlock";
 import GiftProgressBar from "@/components/GiftProgressBar";
 import HeroCarousel from "@/components/HeroCarousel";
 import Celebration from "@/components/Celebration";
@@ -145,7 +146,7 @@ export default function GiftingScreen({
     const waName = getWaName();
     const nameSuffix = waName ? ` - ${waName}` : "";
     const shareText = encodeURIComponent(
-      `Hey! I am sharing with you an exclusive upto ₹1000 gift invite link from Intaara. Pick your favourite jewellery gift, I have already selected mine. \nCheck it out : https://wa.me/918076130691?text=Hi%20Intaara%2C%20I%20got%20Exclusive%20Invite%20INV1221%20From${encodeURIComponent(nameSuffix)}`
+      `Hey! I am sharing with you an invite-only upto ₹1000 gift invite link from Intaara. Pick your favourite jewellery gift, I have already selected mine. \nCheck it out : https://wa.me/918076130691?text=Hi%20Intaara%2C%20I%20got%20Exclusive%20Invite%20INV1221%20From${encodeURIComponent(nameSuffix)}`
     );
     const a = document.createElement("a");
     a.href = `https://api.whatsapp.com/send?text=${shareText}`;
@@ -443,6 +444,11 @@ export default function GiftingScreen({
                   {(i + 1) % 4 === 0 && i < filteredProducts.length - 1 && (
                     <div className="col-span-2 -mx-4 my-1">
                       <FeatureMarquee />
+                    </div>
+                  )}
+                  {i + 1 === 8 && i < filteredProducts.length - 1 && (
+                    <div className="col-span-2 my-2">
+                      <QualityShowcaseBlock />
                     </div>
                   )}
                 </Fragment>
