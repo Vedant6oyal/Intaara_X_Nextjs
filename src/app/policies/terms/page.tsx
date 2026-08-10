@@ -207,7 +207,7 @@ export default function TermsPage() {
       </h2>
       <ul className="space-y-2 pl-1">
         <li>
-          In accordance with the Consumer Protection Act (2019), we are required
+          In accordance with the Consumer Protection Act(2019), we are required
           to designate a Grievance Officer to address your concerns.
         </li>
         <li>
