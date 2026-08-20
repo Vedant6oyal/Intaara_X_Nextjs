@@ -19,11 +19,13 @@ export default function GiftingScreen({
   hasNextPage: initialHasNextPage,
   endCursor: initialEndCursor,
   categories,
+  mysteryGift,
 }: {
   products: Product[];
   hasNextPage: boolean;
   endCursor: string | null;
   categories: Category[];
+  mysteryGift: Product | null;
 }) {
   const { gifts, giftTotal, giftsFull, hydrated, gift2Unlocked, unlockGift2 } = useAppStore();
   const [showPopup, setShowPopup] = useState(false);
@@ -95,14 +97,22 @@ export default function GiftingScreen({
 
   // Only fire when the box *transitions* from not-full → full after hydration.
   // Prevents re-showing on every page load when the user already has 2 gifts.
+  // When the mystery gift is auto-added (gift2 just unlocked), defer the
+  // "gift box ready" popup until after the mystery gift popup is dismissed.
   const prevFull = useRef<boolean | null>(null);
+  const unlockPopupPending = useRef(false);
   useEffect(() => {
     if (!hydrated) return;
     if (prevFull.current === false && giftsFull) {
-      setShowPopup(true);
+      if (prevUnlocked.current === false && gift2Unlocked) {
+        // Mystery gift was just auto-added — let the unlocked popup show first.
+        unlockPopupPending.current = true;
+      } else {
+        setShowPopup(true);
+      }
     }
     prevFull.current = giftsFull;
-  }, [giftsFull, hydrated]);
+  }, [giftsFull, hydrated, gift2Unlocked]);
 
   // Fire share popup when the first gift is added (and 2nd is still locked).
   const prevGiftCount = useRef<number | null>(null);
@@ -142,7 +152,7 @@ export default function GiftingScreen({
 
   function handleWhatsAppShare() {
     trackEvent("share_cta_clicked", { share_channel: "whatsapp" });
-    unlockGift2();
+    unlockGift2(mysteryGift ?? undefined);
     const waName = getWaName();
     const nameSuffix = waName ? ` - ${waName}` : "";
     const shareText = encodeURIComponent(
@@ -234,7 +244,13 @@ export default function GiftingScreen({
       {showUnlockedPopup && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-6 animate-fade-in"
-          onClick={() => setShowUnlockedPopup(false)}
+          onClick={() => {
+            setShowUnlockedPopup(false);
+            if (unlockPopupPending.current) {
+              unlockPopupPending.current = false;
+              setShowPopup(true);
+            }
+          }}
         >
           <div
             className="relative w-full max-w-sm animate-pop overflow-hidden rounded-2xl bg-white p-6 text-center shadow-2xl"
@@ -244,17 +260,44 @@ export default function GiftingScreen({
               <Gift size={28} className="text-sage-700" />
             </span>
             <h3 className="relative text-xl font-bold tracking-wide text-sage-800">
-              2nd Gift Unlocked! 🎉
+              Mystery Gift Unlocked! 🎉
             </h3>
             <p className="relative mt-2 text-sm text-gray-600">
-              Your second free gift is now available. Pick one from the collection below!
+              You've unlocked a surprise mystery jewellery gift! It's been added to your gift box.
             </p>
+            {mysteryGift && (
+              <div className="relative mt-4 flex items-center gap-3 rounded-xl bg-sage-50 p-3 text-left">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={mysteryGift.image}
+                  alt={mysteryGift.name}
+                  className="h-16 w-16 rounded-lg object-cover"
+                />
+                <div>
+                  <p className="text-sm font-semibold text-gray-800">{mysteryGift.name}</p>
+                  <div className="mt-0.5 flex items-center gap-2">
+                    <span className="text-sm font-bold text-terracotta-500 line-through decoration-1">
+                      ₹{mysteryGift.price.toLocaleString("en-IN")}
+                    </span>
+                    <span className="rounded-md bg-green-100 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-green-700">
+                      FREE
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <button
-              onClick={() => setShowUnlockedPopup(false)}
+              onClick={() => {
+                setShowUnlockedPopup(false);
+                if (unlockPopupPending.current) {
+                  unlockPopupPending.current = false;
+                  setShowPopup(true);
+                }
+              }}
               className="relative mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-sage-700 py-3 text-sm font-bold text-white shadow-md transition hover:bg-sage-800"
             >
-              Pick My 2nd Gift <ArrowRight size={16} />
+              Continue <ArrowRight size={16} />
             </button>
           </div>
         </div>
@@ -273,10 +316,10 @@ export default function GiftingScreen({
               <Gift size={28} className="text-sage-700" />
             </span>
             <h3 className="text-xl font-bold tracking-wide text-sage-800">
-              You've unlocked a 2nd gift 🥳!
+              Unlock a Mystery Gift 🎁
             </h3>
             <p className="mt-2 text-sm text-gray-600">
-              Share this <span className="font-semibold text-terracotta-500">FREE GIFT INVITE</span> with at least <span className="font-semibold text-terracotta-500"> 3 of your friends </span> to claim your second free gift.
+              Share this <span className="font-semibold text-terracotta-500">FREE GIFT INVITE</span> with at least <span className="font-semibold text-terracotta-500"> 3 of your friends </span> to unlock a surprise mystery jewellery gift.
             </p>
 
             <button
@@ -328,14 +371,21 @@ export default function GiftingScreen({
             <h3 className="relative font-cinzel text-xl font-bold tracking-wide text-sage-800">
               Your gift box is ready!
             </h3>
-            <p className="relative mt-3 font-cinzel text-3xl font-bold tabular-nums text-terracotta-500">
-              ₹{popupTotal.toLocaleString("en-IN")}
-            </p>
-            <p className="relative -mt-0.5 text-[11px] font-bold uppercase tracking-[0.18em] text-sage-700">
-              worth
-            </p>
-            <p className="relative mt-2 text-xs text-gray-500">
-              Buy any product on the next screen to claim them at ₹0.
+
+            <div className="relative mt-4 flex flex-col items-center">
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-gray-400">
+                Total Gift Value
+              </p>
+              <p className="relative mt-1 font-cinzel text-5xl font-bold tabular-nums text-terracotta-500 line-through decoration-[3px]">
+                ₹{popupTotal.toLocaleString("en-IN")}
+              </p>
+              <span className="relative mt-2 inline-flex items-center rounded-full bg-green-100 px-4 py-1.5 text-sm font-bold uppercase tracking-wide text-green-700">
+                 FREE
+              </span>
+            </div>
+
+            <p className="relative mt-3 text-xs text-gray-500">
+              Buy any product on the next screen to claim your gifts at ₹0.
             </p>
 
             <Link

@@ -31,8 +31,10 @@ import { trackEvent } from "@/lib/analytics";
 
 export default function ProductDetails({
   product,
+  mysteryGift,
 }: {
   product: Product;
+  mysteryGift: Product | null;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -367,7 +369,7 @@ export default function ProductDetails({
               if (!selected && giftsFull) return;
               if (!selected && gift2Locked) {
                 trackEvent("share_cta_clicked", { share_channel: "whatsapp", source: "product_details" });
-                unlockGift2();
+                unlockGift2(mysteryGift ?? undefined);
                 const shareText = encodeURIComponent(
                   "Hey! I just unlocked a FREE gift from Intaara 🎁 You can grab yours too! Check it out: https://intaara.com"
                 );

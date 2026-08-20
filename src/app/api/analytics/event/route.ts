@@ -56,7 +56,10 @@ export async function POST(req: Request) {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+  console.log("[analytics/event] URL:", url ? "present" : "MISSING", "KEY:", serviceRoleKey ? "present" : "MISSING");
+
   if (!url || !serviceRoleKey) {
+    console.log("[analytics/event] RETURNING 204: missing env vars");
     return new NextResponse(null, { status: 204 });
   }
 
@@ -84,6 +87,7 @@ export async function POST(req: Request) {
     !isProperties(body.properties) ||
     !isAttribution(body.attribution)
   ) {
+    console.log("[analytics/event] RETURNING 400: validation failed", JSON.stringify(body).slice(0, 200));
     return NextResponse.json({ error: "Invalid analytics event" }, { status: 400 });
   }
 
@@ -117,9 +121,11 @@ export async function POST(req: Request) {
   });
 
   if (error) {
-    console.error("Analytics event insert failed:", error.message);
+    console.error("[analytics/event] INSERT FAILED:", error.message, error.code);
     return new NextResponse(null, { status: 500 });
   }
+
+  console.log("[analytics/event] INSERT SUCCESS for", body.anonymousId);
 
   const visitorRow = {
     anonymous_id: body.anonymousId,

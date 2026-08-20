@@ -10,8 +10,14 @@ const MAX_SLOTS = 2;
 const SHOW_AFTER_PX = 80;
 
 export default function GiftProgressBar() {
-  const { gifts, giftTotal, toggleGift, gift2Locked } = useAppStore();
-  const filledCount = Math.min(gifts.length, MAX_SLOTS);
+  const { gifts, giftTotal, toggleGift, gift2Locked, mysteryGiftId } = useAppStore();
+
+  // Separate mystery gift from regular gifts so the mystery gift always
+  // renders in slot 2, even if the user removes their first gift.
+  const mysteryGift = gifts.find((g) => g.id === mysteryGiftId);
+  const regularGifts = gifts.filter((g) => g.id !== mysteryGiftId);
+  const slots = [regularGifts[0], mysteryGift ?? regularGifts[1]].slice(0, MAX_SLOTS);
+  const filledCount = slots.filter(Boolean).length;
 
   // 0 → 0%, 1 → 50%, 2 → 100% (clamped so stale state can't overflow)
   const progressPct = Math.min((filledCount / MAX_SLOTS) * 100, 100);
@@ -76,9 +82,10 @@ export default function GiftProgressBar() {
 
         <div className="relative flex items-start justify-around">
           {Array.from({ length: MAX_SLOTS }).map((_, i) => {
-            const reached = filledCount > i;
-            const product = gifts[i];
+            const product = slots[i];
+            const reached = Boolean(product);
             const isLockedSlot = i === 1 && gift2Locked;
+            const isMysterySlot = product?.id === mysteryGiftId;
             return (
               <div key={i} className="flex flex-col items-center gap-1.5">
                 <div
@@ -107,13 +114,15 @@ export default function GiftProgressBar() {
                       <span className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full bg-sage-600 text-white ring-2 ring-cream">
                         <Check size={10} strokeWidth={3} />
                       </span>
-                      <button
-                        aria-label={`Remove ${product.name}`}
-                        onClick={() => toggleGift(product)}
-                        className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-white text-gray-500 shadow ring-1 ring-black/10"
-                      >
-                        <X size={11} strokeWidth={3} />
-                      </button>
+                      {!isMysterySlot && (
+                        <button
+                          aria-label={`Remove ${product.name}`}
+                          onClick={() => toggleGift(product)}
+                          className="absolute -right-1.5 -top-1.5 grid h-5 w-5 place-items-center rounded-full bg-white text-gray-500 shadow ring-1 ring-black/10"
+                        >
+                          <X size={11} strokeWidth={3} />
+                        </button>
+                      )}
                     </>
                   ) : isLockedSlot ? (
                     <Lock size={16} />

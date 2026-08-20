@@ -22,7 +22,8 @@ type AppState = {
   giftsFull: boolean;
   gift2Unlocked: boolean;
   gift2Locked: boolean;
-  unlockGift2: () => void;
+  mysteryGiftId: string | null;
+  unlockGift2: (mysteryProduct?: Product) => void;
   isGiftSelected: (id: string) => boolean;
   toggleGift: (p: Product) => void;
 
@@ -54,6 +55,7 @@ type Persisted = {
   gifts: Product[];
   cart: CartLine[];
   gift2Unlocked?: boolean;
+  mysteryGiftId?: string | null;
   wishlist?: Product[];
 };
 
@@ -79,6 +81,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartLine[]>([]);
   const [wishlist, setWishlist] = useState<Product[]>([]);
   const [gift2Unlocked, setGift2Unlocked] = useState(false);
+  const [mysteryGiftId, setMysteryGiftId] = useState<string | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
@@ -96,6 +99,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       setGifts(persisted.gifts.slice(0, MAX_GIFTS));
       setCart(persisted.cart);
       if (persisted.gift2Unlocked) setGift2Unlocked(true);
+      if (persisted.mysteryGiftId) setMysteryGiftId(persisted.mysteryGiftId);
       if (persisted.wishlist) setWishlist(persisted.wishlist);
     }
     setHydrated(true);
@@ -108,12 +112,12 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     try {
       window.localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ gifts, cart, gift2Unlocked, wishlist } satisfies Persisted)
+        JSON.stringify({ gifts, cart, gift2Unlocked, mysteryGiftId, wishlist } satisfies Persisted)
       );
     } catch {
       // ignore quota / private-mode errors
     }
-  }, [gifts, cart, hydrated, wishlist]);
+  }, [gifts, cart, hydrated, wishlist, mysteryGiftId]);
 
   const giftTotal = useMemo(
     () => gifts.reduce((sum, g) => sum + g.price, 0),
@@ -128,14 +132,27 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   const giftsFull = gifts.length >= MAX_GIFTS;
   const gift2Locked = gifts.length === 1 && !gift2Unlocked;
 
-  const unlockGift2 = useCallback(() => {
+  const unlockGift2 = useCallback((mysteryProduct?: Product) => {
     if (!gift2Unlocked) trackEvent("second_gift_unlocked");
     setGift2Unlocked(true);
-  }, [gift2Unlocked]);
+    if (mysteryProduct && gifts.length === 1) {
+      setMysteryGiftId(mysteryProduct.id);
+      trackEvent("gift_selected", {
+        gift_id: mysteryProduct.id,
+        gift_name: mysteryProduct.name,
+        gift_number: 2,
+        gift_price: mysteryProduct.price,
+        mystery_gift: true,
+      });
+      setGifts((prev) => [...prev, mysteryProduct]);
+    }
+  }, [gift2Unlocked, gifts]);
 
   const toggleGift = useCallback((p: Product) => {
     const exists = gifts.some((g) => g.id === p.id);
     if (exists) {
+      // Mystery gift cannot be removed once unlocked.
+      if (p.id === mysteryGiftId) return;
       trackEvent("gift_removed", { gift_id: p.id, gift_name: p.name });
       setGifts((prev) => prev.filter((g) => g.id !== p.id));
       return;
@@ -148,7 +165,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       gift_price: p.price,
     });
     setGifts((prev) => [...prev, p]);
-  }, [gift2Unlocked, gifts]);
+  }, [gift2Unlocked, gifts, mysteryGiftId]);
 
   const inCart = useCallback(
     (id: string) => cart.find((l) => l.product.id === id)?.qty ?? 0,
@@ -221,6 +238,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     giftsFull,
     gift2Unlocked,
     gift2Locked,
+    mysteryGiftId,
     unlockGift2,
     cartOpen,
     openCart,
