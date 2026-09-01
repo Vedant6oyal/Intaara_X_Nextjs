@@ -31,6 +31,7 @@ export default function CartDrawer() {
     gifts,
     giftTotal,
     toggleGift,
+    mysteryGiftId,
   } = useAppStore();
 
   const [loading, setLoading] = useState(false);
@@ -69,6 +70,8 @@ export default function CartDrawer() {
     });
 
     // Build Shiprocket product list: cart items + free gifts.
+    // The mystery gift is excluded — Shiprocket's discount code adds it
+    // automatically, so including it here would duplicate it in checkout.
     const products: ShiprocketProduct[] = [
       ...cart.flatMap((line) =>
         Array.from({ length: line.qty }, () => ({
@@ -76,10 +79,12 @@ export default function CartDrawer() {
           quantity: 1,
         }))
       ),
-      ...gifts.map((g) => ({
-        variantId: toNumericVariantId(g.variantId ?? g.id),
-        quantity: 1,
-      })),
+      ...gifts
+        .filter((g) => g.id !== mysteryGiftId)
+        .map((g) => ({
+          variantId: toNumericVariantId(g.variantId ?? g.id),
+          quantity: 1,
+        })),
     ];
 
     const cartAttributes: Record<string, unknown> = {
