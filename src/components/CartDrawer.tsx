@@ -113,6 +113,10 @@ export default function CartDrawer() {
       return;
     }
 
+    // Close the cart drawer first so Shiprocket's overlay appears cleanly
+    // without the drawer competing for z-index.
+    closeCart();
+
     buyDirect({
       type: "cart",
       products,
