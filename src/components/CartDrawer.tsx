@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import * as Dialog from "@radix-ui/react-dialog";
@@ -36,6 +36,19 @@ export default function CartDrawer() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [shiprocketReady, setShiprocketReady] = useState(false);
+
+  // Poll for Shiprocket script readiness (it loads async via ShiprocketLoader).
+  useEffect(() => {
+    if (shiprocketReady) return;
+    const interval = setInterval(() => {
+      if (typeof window !== "undefined" && window.shiprocketCheckoutEvents?.buyDirect) {
+        setShiprocketReady(true);
+        clearInterval(interval);
+      }
+    }, 500);
+    return () => clearInterval(interval);
+  }, [shiprocketReady]);
 
   const expandedItems = useMemo(() => {
     const items: { product: typeof cart[number]["product"] }[] = [];
@@ -93,8 +106,9 @@ export default function CartDrawer() {
     };
 
     const buyDirect = window.shiprocketCheckoutEvents?.buyDirect;
+    console.log("[Checkout] buyDirect available:", !!buyDirect, "products:", products.length);
     if (!buyDirect) {
-      setError("Checkout is not ready yet. Please try again in a moment.");
+      setError("Checkout is loading, please wait a moment and try again.");
       setLoading(false);
       return;
     }
@@ -105,7 +119,10 @@ export default function CartDrawer() {
       couponCode: SHIPROCKET_COUPON_CODE || undefined,
       cartAttributes,
     });
-    setLoading(false);
+    console.log("[Checkout] buyDirect called successfully");
+
+    // Reset loading after 8s in case Shiprocket overlay is slow/fails to appear.
+    setTimeout(() => setLoading(false), 8000);
   }
 
   return (
