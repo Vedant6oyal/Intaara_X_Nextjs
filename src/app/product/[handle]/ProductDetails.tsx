@@ -264,7 +264,11 @@ export default function ProductDetails({
         <Badge icon={<img src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Icons/waterproof_1.png" alt="" loading="lazy" className="h-5 w-5 object-contain" />} label="Waterproof" />
         <Badge icon={<img src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Icons/skin_friendly.png" alt="" loading="lazy" className="h-5 w-5 object-contain" />} label="Skin Friendly" />
     <Badge icon={<RotateCcw size={16} />} label="24hr return" />
-        <Badge icon={<Banknote size={16} />} label="Cash on delivery" />
+        <div className="flex flex-col items-center gap-1 rounded-xl bg-amber-50 px-2 py-3 text-center ring-1 ring-amber-200">
+          <Banknote size={16} className="text-amber-600" />
+          <span className="text-[13px] font-bold text-gray-700">Cash on delivery</span>
+          <span className="text-[10px] font-semibold uppercase tracking-wide text-amber-600">Available</span>
+        </div>
         <Badge icon={<Truck size={16} />} label="Free shipping" />
       </section>
 
