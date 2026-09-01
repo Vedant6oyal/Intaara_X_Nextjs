@@ -3,7 +3,7 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Banknote, Crown, Gift, Pencil, RotateCcw, ShoppingBag, Sparkles, Truck } from "lucide-react";
+import { ArrowRight, Banknote, Gift, Pencil, RotateCcw, ShoppingBag, Truck } from "lucide-react";
 import type { Category, Product } from "@/data/products";
 import { useAppStore } from "@/store/AppStore";
 import CategoryStrip from "@/components/CategoryStrip";
@@ -11,7 +11,6 @@ import ProductCard from "@/components/ProductCard";
 import { trackEvent } from "@/lib/analytics";
 import FeatureMarquee from "@/components/FeatureMarquee";
 import QualityShowcaseBlock from "@/components/QualityShowcaseBlock";
-import Celebration from "@/components/Celebration";
 
 export default function RedeemScreen({
   products,
@@ -22,8 +21,6 @@ export default function RedeemScreen({
 }) {
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [headerHidden, setHeaderHidden] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [showRewardPopup, setShowRewardPopup] = useState(false);
   const [showGiftClaimPopup, setShowGiftClaimPopup] = useState(false);
   const { gifts, giftTotal, cart, cartCount, cartTotal, openCart } = useAppStore();
 
@@ -37,100 +34,14 @@ export default function RedeemScreen({
     }
   }, [gifts.length, cartCount]);
 
-  // Detect when the first cart item is added → tease 50% off on their next.
-  // When the second item is added → auto-open the cart for checkout.
+  // Auto-open the cart drawer whenever a product is added.
   const prevCartCount = useRef<number>(0);
   useEffect(() => {
-    if (prevCartCount.current === 0 && cartCount === 1) {
-      setShowConfetti(true);
-      setShowRewardPopup(true);
-      const timer = setTimeout(() => setShowConfetti(false), 4000);
-      prevCartCount.current = cartCount;
-      return () => clearTimeout(timer);
-    }
-    if (prevCartCount.current < 2 && cartCount >= 2) {
-      setShowRewardPopup(false);
+    if (cartCount > prevCartCount.current) {
       openCart();
     }
     prevCartCount.current = cartCount;
   }, [cartCount, openCart]);
-
-  const discountUnlocked = cartCount === 1;
-
-  // 50% off on the second unit in the cart (same product or different).
-  const flatPrices = cart.flatMap((l) => Array(l.qty).fill(l.product.price));
-  const discountAmount = flatPrices.length >= 2 ? Math.round(flatPrices[1] * 0.5) : 0;
-  const displayTotal = cartTotal - discountAmount;
-
-  // Per-category scroll position preservation.
-  const scrollPositions = useRef<Record<string, number>>({});
-  const [categoryRestored, setCategoryRestored] = useState(false);
-  const skipCategoryScroll = useRef(false);
-  const switchCategory = (cat: string | null) => {
-    scrollPositions.current[activeCategory ?? "__all"] = window.scrollY;
-    setActiveCategory(cat);
-    trackEvent("category_selected", {
-      screen: "redeem",
-      category: cat ?? "all",
-    });
-    if (cat) window.sessionStorage.setItem("redeem:category", cat);
-    else window.sessionStorage.removeItem("redeem:category");
-  };
-
-  // Restore the saved category after mount (not during render, to avoid a
-  // hydration mismatch between server and client).
-  useEffect(() => {
-    const saved = window.sessionStorage.getItem("redeem:category");
-    if (saved) {
-      skipCategoryScroll.current = true;
-      setActiveCategory(saved);
-    }
-    setCategoryRestored(true);
-  }, []);
-
-  useEffect(() => {
-    const onScroll = () => {
-      setHeaderHidden(window.scrollY > 10);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
-  // Restore scroll after the saved collection has been applied and its product
-  // grid has rendered. Restoring against the initial "All" grid would be
-  // clamped when that grid is replaced by a shorter collection.
-  const scrollRestored = useRef(false);
-  useEffect(() => {
-    if (!categoryRestored || scrollRestored.current) return;
-    const savedCategory = window.sessionStorage.getItem("redeem:category");
-    if (savedCategory && activeCategory !== savedCategory) return;
-    const saved = window.sessionStorage.getItem("redeem:scroll");
-    if (saved == null) return;
-    scrollRestored.current = true;
-    const target = Number(saved);
-    const restore = () => window.scrollTo(0, target);
-    requestAnimationFrame(() => {
-      restore();
-      window.setTimeout(restore, 100);
-    });
-  }, [activeCategory, categoryRestored]);
-
-  // Restore scroll position when switching categories in-session. Skip the
-  // very first render so it doesn't clobber the sessionStorage restore above.
-  const isFirstRender = useRef(true);
-  useEffect(() => {
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      return;
-    }
-    if (skipCategoryScroll.current) {
-      skipCategoryScroll.current = false;
-      return;
-    }
-    const saved = scrollPositions.current[activeCategory ?? "__all"];
-    if (saved != null) window.scrollTo(0, saved);
-    else window.scrollTo(0, 0);
-  }, [activeCategory]);
 
   const filtered = useMemo(
     () =>
@@ -144,11 +55,32 @@ export default function RedeemScreen({
     ? categories.find((c) => c.id === activeCategory)?.name ?? "Products"
     : "All products";
 
+  const switchCategory = (cat: string | null) => {
+    setActiveCategory(cat);
+    trackEvent("category_selected", {
+      screen: "redeem",
+      category: cat ?? "all",
+    });
+    if (cat) window.sessionStorage.setItem("redeem:category", cat);
+    else window.sessionStorage.removeItem("redeem:category");
+  };
+
+  // Restore the saved category after mount.
+  useEffect(() => {
+    const saved = window.sessionStorage.getItem("redeem:category");
+    if (saved) setActiveCategory(saved);
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => {
+      setHeaderHidden(window.scrollY > 10);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <div className="pb-28">
-      {/* Cannon-style confetti celebration when second product is added */}
-      <Celebration show={showConfetti} />
-
       {/* Gift claim popup — shown on entry when gifts are selected */}
       {showGiftClaimPopup && (
         <div
@@ -194,59 +126,6 @@ export default function RedeemScreen({
                 className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-sage-700 py-3 text-sm font-bold uppercase tracking-wide text-white shadow-md transition hover:bg-sage-800"
               >
                 Start Shopping <ArrowRight size={16} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 50% OFF unlocked — reward popup */}
-      {showRewardPopup && (
-        <div
-          className="fixed inset-0 z-[55] flex items-center justify-center bg-black/50 px-6 animate-fade-in"
-          onClick={() => setShowRewardPopup(false)}
-        >
-          <div
-            className="relative w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-2xl animate-reward-pop"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Gold gradient header with shimmer */}
-            <div className="relative overflow-hidden bg-gradient-to-br from-[#f5d76e] via-[#d4af37] to-[#a8801f] px-6 pb-6 pt-7 text-center">
-              <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                <div className="absolute inset-y-0 -left-1/3 w-1/3 bg-gradient-to-r from-transparent via-white/70 to-transparent animate-shine-sweep" />
-              </div>
-
-              <div className="relative">
-                <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#1A3C2A] text-[#f5d76e] ring-4 ring-white/70 shadow-lg">
-                  <Crown size={32} className="drop-shadow" />
-                </span>
-                <p className="mt-3 flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.24em] text-[#1A3C2A]/80">
-                  <Sparkles size={12} /> Special Offer <Sparkles size={12} />
-                </p>
-                <h3 className="mt-1 font-cinzel text-3xl font-bold leading-tight text-[#1A3C2A]">
-                  50% OFF
-                </h3>
-                <p className="mt-0.5 text-lg font-bold text-[#1A3C2A]">
-                  on your next item
-                </p>
-              </div>
-            </div>
-
-            {/* Body */}
-            <div className="px-6 pb-6 pt-5 text-center">
-              <p className="text-sm text-gray-600">
-                Add one more item to your cart to get it at{" "}
-                <span className="font-semibold text-[#1A3C2A]">
-                  half price
-                </span>
-                .
-              </p>
-
-              <button
-                onClick={() => setShowRewardPopup(false)}
-                className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-[#1A3C2A] py-3 text-sm font-bold uppercase tracking-wide text-white shadow-md transition hover:bg-[#152e20]"
-              >
-                Shop Now <ArrowRight size={16} />
               </button>
             </div>
           </div>
@@ -371,7 +250,7 @@ export default function RedeemScreen({
           <div className="grid grid-cols-2 gap-3">
             {filtered.map((p, i) => (
               <Fragment key={p.id}>
-                <ProductCard product={p} discountUnlocked={discountUnlocked} />
+                <ProductCard product={p} />
                 {(i + 1) % 4 === 0 && i < filtered.length - 1 && (
                   <div className="col-span-2 -mx-4 my-1">
                     <FeatureMarquee />
@@ -396,7 +275,7 @@ export default function RedeemScreen({
           >
             <span className="flex items-center gap-2 text-sm font-semibold">
               <ShoppingBag size={18} />
-              {cartCount} item{cartCount > 1 ? "s" : ""} · ₹{displayTotal}
+              {cartCount} item{cartCount > 1 ? "s" : ""} · ₹{cartTotal}
             </span>
             <span className="flex items-center gap-1.5 text-sm font-bold">
               Go to Checkout

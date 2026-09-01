@@ -16,7 +16,7 @@ import {
 import { useAppStore } from "@/store/AppStore";
 import { useCountUp } from "@/hooks/useCountUp";
 import { trackEvent } from "@/lib/analytics";
-import WaitingScreen from "@/components/WaitingScreen";
+import { toNumericVariantId, SHIPROCKET_COUPON_CODE } from "@/lib/shiprocket";
 
 export default function CartDrawer() {
   const {
@@ -35,30 +35,22 @@ export default function CartDrawer() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showWaiting, setShowWaiting] = useState(false);
 
   const expandedItems = useMemo(() => {
-    const items: { product: typeof cart[number]["product"]; isHalfOff: boolean }[] = [];
-  cart.forEach((line) => {
+    const items: { product: typeof cart[number]["product"] }[] = [];
+    cart.forEach((line) => {
       for (let i = 0; i < line.qty; i++) {
-        items.push({ product: line.product, isHalfOff: false });
+        items.push({ product: line.product });
       }
     });
-    if (items.length >= 2) items[1].isHalfOff = true;
     return items;
   }, [cart]);
-
-  const discountAmount =
-    expandedItems.length >= 2
-      ? Math.round(expandedItems[1].product.price * 0.5)
-      : 0;
-  const discountedTotal = cartTotal - discountAmount;
 
   const mrpTotal = cart.reduce(
     (s, l) => s + (l.product.mrp ?? l.product.price) * l.qty,
     0
   );
-  const savings = mrpTotal - cartTotal + discountAmount + giftTotal;
+  const savings = mrpTotal - cartTotal + giftTotal;
   const totalMrp = mrpTotal + giftTotal;
 
   function handleCheckout() {
@@ -75,10 +67,40 @@ export default function CartDrawer() {
       redeem_item_count: cartCount,
       cart_value: cartTotal,
     });
-    setTimeout(() => {
+
+    // Build Shiprocket product list: cart items + free gifts.
+    const products: ShiprocketProduct[] = [
+      ...cart.flatMap((line) =>
+        Array.from({ length: line.qty }, () => ({
+          variantId: toNumericVariantId(line.product.variantId ?? line.product.id),
+          quantity: 1,
+        }))
+      ),
+      ...gifts.map((g) => ({
+        variantId: toNumericVariantId(g.variantId ?? g.id),
+        quantity: 1,
+      })),
+    ];
+
+    const cartAttributes: Record<string, unknown> = {
+      gift_count: gifts.length,
+      gift_total: giftTotal,
+    };
+
+    const buyDirect = window.shiprocketCheckoutEvents?.buyDirect;
+    if (!buyDirect) {
+      setError("Checkout is not ready yet. Please try again in a moment.");
       setLoading(false);
-      setShowWaiting(true);
-    }, 500);
+      return;
+    }
+
+    buyDirect({
+      type: "cart",
+      products,
+      couponCode: SHIPROCKET_COUPON_CODE || undefined,
+      cartAttributes,
+    });
+    setLoading(false);
   }
 
   return (
@@ -141,9 +163,6 @@ export default function CartDrawer() {
                     {expandedItems.map((item, idx) => {
                       const p = item.product;
                       const saved = p.mrp ? p.mrp - p.price : 0;
-                      const unitPrice = item.isHalfOff
-                        ? Math.round(p.price * 0.5)
-                        : p.price;
                       return (
                         <li
                           key={`${p.id}-${idx}`}
@@ -173,40 +192,24 @@ export default function CartDrawer() {
                             </div>
 
                             <div className="mt-1 flex items-baseline gap-2">
-                              {item.isHalfOff ? (
-                                <>
-                                  <span className="text-sm font-bold text-gray-900">
-                                    ₹{unitPrice}
-                                  </span>
-                                  <span className="text-xs text-gray-400 line-through">
-                                    ₹{p.price}
-                                  </span>
-                                  <span className="rounded bg-amber-100 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700">
-                                    50% OFF
-                                  </span>
-                                </>
-                              ) : (
-                                <>
-                                  <span className="text-sm font-bold text-gray-900">
-                                    ₹{p.price}
-                                  </span>
-                                  {p.mrp && p.mrp > p.price && (
-                                    <span className="text-xs text-gray-400 line-through">
-                                      ₹{p.mrp}
-                                    </span>
-                                  )}
-                                  {saved > 0 && (
-                                    <span className="rounded bg-sage-100 px-1.5 py-0.5 text-[10px] font-semibold text-sage-700">
-                                      Save ₹{saved}
-                                    </span>
-                                  )}
-                                </>
+                              <span className="text-sm font-bold text-gray-900">
+                                ₹{p.price}
+                              </span>
+                              {p.mrp && p.mrp > p.price && (
+                                <span className="text-xs text-gray-400 line-through">
+                                  ₹{p.mrp}
+                                </span>
+                              )}
+                              {saved > 0 && (
+                                <span className="rounded bg-sage-100 px-1.5 py-0.5 text-[10px] font-semibold text-sage-700">
+                                  Save ₹{saved}
+                                </span>
                               )}
                             </div>
 
                             <div className="mt-auto flex items-center justify-end pt-2">
                               <span className="text-sm font-bold text-gray-900">
-                                ₹{unitPrice}
+                                ₹{p.price}
                               </span>
                             </div>
                           </div>
@@ -292,9 +295,9 @@ export default function CartDrawer() {
                   )}
                   <div className="mt-1 flex items-baseline gap-2">
                     <span className="text-xl font-bold text-gray-900">
-                      ₹{discountedTotal}
+                      ₹{cartTotal}
                     </span>
-                    {totalMrp > discountedTotal && (
+                    {totalMrp > cartTotal && (
                       <span className="text-sm text-gray-400 line-through">
                         ₹{totalMrp}
                       </span>
@@ -325,9 +328,6 @@ export default function CartDrawer() {
           )}
         </Dialog.Content>
       </Dialog.Portal>
-      {showWaiting && (
-        <WaitingScreen onClose={() => setShowWaiting(false)} />
-      )}
     </Dialog.Root>
   );
 }
