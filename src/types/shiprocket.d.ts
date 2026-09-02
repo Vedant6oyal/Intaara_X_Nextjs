@@ -21,5 +21,6 @@ declare global {
 
   interface Window {
     shiprocketCheckoutEvents?: ShiprocketCheckoutEvents;
+    fbq?: (track: string, event: string, params?: Record<string, unknown>) => void;
   }
 }

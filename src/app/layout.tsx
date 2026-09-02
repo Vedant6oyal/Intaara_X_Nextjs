@@ -7,6 +7,7 @@ import CartDrawer from "@/components/CartDrawer";
 import WishlistDrawer from "@/components/WishlistDrawer";
 import Footer from "@/components/Footer";
 import ShiprocketLoader from "@/components/ShiprocketLoader";
+import MetaPixel from "@/components/MetaPixel";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
 import { getAllShopProducts, getShopCollections } from "@/lib/products";
 import type { Category } from "@/data/products";
@@ -72,6 +73,7 @@ export default async function RootLayout({
         </AppStoreProvider>
 
         <ShiprocketLoader />
+        <MetaPixel />
       </body>
     </html>
   );
