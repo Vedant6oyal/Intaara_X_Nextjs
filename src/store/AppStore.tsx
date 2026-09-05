@@ -24,6 +24,8 @@ type AppState = {
   gift2Locked: boolean;
   mysteryGiftId: string | null;
   unlockGift2: (mysteryProduct?: Product) => void;
+  /** Ensures the mystery gift occupies gift slot 2, fixing any stale state. */
+  ensureMysteryGift: (mysteryProduct: Product) => void;
   isGiftSelected: (id: string) => boolean;
   toggleGift: (p: Product) => void;
 
@@ -56,6 +58,7 @@ type Persisted = {
   cart: CartLine[];
   gift2Unlocked?: boolean;
   mysteryGiftId?: string | null;
+  mysteryGiftProduct?: Product | null;
   wishlist?: Product[];
 };
 
@@ -82,6 +85,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   const [wishlist, setWishlist] = useState<Product[]>([]);
   const [gift2Unlocked, setGift2Unlocked] = useState(false);
   const [mysteryGiftId, setMysteryGiftId] = useState<string | null>(null);
+  const [mysteryGiftProduct, setMysteryGiftProduct] = useState<Product | null>(null);
   const [hydrated, setHydrated] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [wishlistOpen, setWishlistOpen] = useState(false);
@@ -100,9 +104,28 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       setCart(persisted.cart);
       if (persisted.gift2Unlocked) setGift2Unlocked(true);
       if (persisted.mysteryGiftId) setMysteryGiftId(persisted.mysteryGiftId);
+      if (persisted.mysteryGiftProduct) setMysteryGiftProduct(persisted.mysteryGiftProduct);
       if (persisted.wishlist) setWishlist(persisted.wishlist);
     }
     setHydrated(true);
+
+    // Fix stale state: if gift2 is unlocked, the mystery gift must occupy the
+    // second slot. Covers pre-feature users (mysteryGiftId missing) and any
+    // wrong second gift saved earlier.
+    if (persisted?.gift2Unlocked && persisted.mysteryGiftProduct) {
+      const mystery = persisted.mysteryGiftProduct;
+      const loaded = persisted.gifts.slice(0, MAX_GIFTS);
+      const hasMystery = loaded.some((g) => g.id === mystery.id);
+      if (loaded.length === 2 && !hasMystery) {
+        // Replace the wrong second gift with the mystery gift.
+        setGifts([loaded[0], mystery]);
+        setMysteryGiftId(mystery.id);
+      } else if (loaded.length === 1 && loaded[0].id !== mystery.id) {
+        // Mystery gift missing — add it as the second gift.
+        setGifts([loaded[0], mystery]);
+        setMysteryGiftId(mystery.id);
+      }
+    }
   }, []);
 
   // Persist whenever state changes (only after hydration so we don't overwrite
@@ -112,12 +135,12 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     try {
       window.localStorage.setItem(
         STORAGE_KEY,
-        JSON.stringify({ gifts, cart, gift2Unlocked, mysteryGiftId, wishlist } satisfies Persisted)
+        JSON.stringify({ gifts, cart, gift2Unlocked, mysteryGiftId, mysteryGiftProduct, wishlist } satisfies Persisted)
       );
     } catch {
       // ignore quota / private-mode errors
     }
-  }, [gifts, cart, hydrated, wishlist, mysteryGiftId]);
+  }, [gifts, cart, hydrated, wishlist, mysteryGiftId, mysteryGiftProduct]);
 
   const giftTotal = useMemo(
     () => gifts.reduce((sum, g) => sum + g.price, 0),
@@ -135,7 +158,12 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
   const unlockGift2 = useCallback((mysteryProduct?: Product) => {
     if (!gift2Unlocked) trackEvent("second_gift_unlocked");
     setGift2Unlocked(true);
-    if (mysteryProduct && gifts.length === 1) {
+    if (mysteryProduct) setMysteryGiftProduct(mysteryProduct);
+    if (
+      mysteryProduct &&
+      gifts.length < MAX_GIFTS &&
+      !gifts.some((g) => g.id === mysteryProduct.id)
+    ) {
       setMysteryGiftId(mysteryProduct.id);
       trackEvent("gift_selected", {
         gift_id: mysteryProduct.id,
@@ -148,6 +176,23 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     }
   }, [gift2Unlocked, gifts]);
 
+  /** Guarantees the mystery gift sits in slot 2 once gift2 is unlocked.
+   *  Called from the gifting screen / product page where the mystery product
+   *  is fetched server-side, so stale or pre-feature state self-heals. */
+  const ensureMysteryGift = useCallback((mysteryProduct: Product) => {
+    setMysteryGiftProduct(mysteryProduct);
+    if (!gift2Unlocked) return;
+    const hasMystery = gifts.some((g) => g.id === mysteryProduct.id);
+    if (hasMystery) {
+      if (mysteryGiftId !== mysteryProduct.id) setMysteryGiftId(mysteryProduct.id);
+      return;
+    }
+    // Mystery gift missing or a wrong gift occupies slot 2 — fix it.
+    const regular = gifts.filter((g) => g.id !== mysteryGiftId);
+    setMysteryGiftId(mysteryProduct.id);
+    setGifts([...regular.slice(0, 1), mysteryProduct]);
+  }, [gift2Unlocked, gifts, mysteryGiftId]);
+
   const toggleGift = useCallback((p: Product) => {
     const exists = gifts.some((g) => g.id === p.id);
     if (exists) {
@@ -158,6 +203,12 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     if (gifts.length >= MAX_GIFTS || (gifts.length === 1 && !gift2Unlocked)) return;
+    // Once gift 2 is unlocked, slot 2 is reserved for the mystery gift.
+    // If the mystery gift isn't in the box yet, nothing else may take slot 2.
+    const mysteryInGifts = mysteryGiftId
+      ? gifts.some((g) => g.id === mysteryGiftId)
+      : false;
+    if (gift2Unlocked && !mysteryInGifts && p.id !== mysteryGiftId) return;
     trackEvent("gift_selected", {
       gift_id: p.id,
       gift_name: p.name,
@@ -240,6 +291,7 @@ export function AppStoreProvider({ children }: { children: React.ReactNode }) {
     gift2Locked,
     mysteryGiftId,
     unlockGift2,
+    ensureMysteryGift,
     cartOpen,
     openCart,
     closeCart,

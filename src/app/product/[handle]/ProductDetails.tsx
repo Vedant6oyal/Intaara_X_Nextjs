@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -45,6 +45,8 @@ export default function ProductDetails({
     giftsFull,
     gift2Locked,
     unlockGift2,
+    ensureMysteryGift,
+    hydrated,
     inCart,
     addToCart,
     removeFromCart,
@@ -53,6 +55,12 @@ export default function ProductDetails({
     isWishlisted,
     toggleWishlist,
   } = useAppStore();
+
+  // Self-heal: guarantee the mystery gift occupies slot 2 whenever gift2 is
+  // unlocked (fixes stale or pre-feature persisted state).
+  useEffect(() => {
+    if (hydrated && mysteryGift) ensureMysteryGift(mysteryGift);
+  }, [hydrated, mysteryGift, ensureMysteryGift]);
 
   // Reviews load client-side directly from Supabase (no serverless function).
   const { data: reviewSummary, loading: reviewsLoading } = useReviews();

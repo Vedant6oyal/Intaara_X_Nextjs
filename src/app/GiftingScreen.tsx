@@ -27,11 +27,17 @@ export default function GiftingScreen({
   categories: Category[];
   mysteryGift: Product | null;
 }) {
-  const { gifts, giftTotal, giftsFull, hydrated, gift2Unlocked, unlockGift2 } = useAppStore();
+  const { gifts, giftTotal, giftsFull, hydrated, gift2Unlocked, unlockGift2, ensureMysteryGift } = useAppStore();
   const [showPopup, setShowPopup] = useState(false);
   const [showSharePopup, setShowSharePopup] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [showUnlockedPopup, setShowUnlockedPopup] = useState(false);
+
+  // Self-heal: once hydrated, guarantee the mystery gift occupies slot 2
+  // whenever gift2 is unlocked (fixes stale or pre-feature persisted state).
+  useEffect(() => {
+    if (hydrated && mysteryGift) ensureMysteryGift(mysteryGift);
+  }, [hydrated, mysteryGift, ensureMysteryGift]);
 
   // Infinite scroll state
   const [products, setProducts] = useState<Product[]>(initialProducts);
