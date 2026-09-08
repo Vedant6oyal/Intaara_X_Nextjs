@@ -3,13 +3,8 @@
 export const ANALYTICS_EVENT_NAMES = [
   "landing_viewed",
   "page_viewed",
-  "gift_selected",
-  "gift_removed",
-  "redeem_product_added",
-  "redeem_product_removed",
-  "second_gift_unlock_prompt_viewed",
-  "share_cta_clicked",
-  "second_gift_unlocked",
+  "product_added",
+  "product_removed",
   "checkout_started",
   "checkout_opened",
   "category_selected",
@@ -123,11 +118,6 @@ export function claimAttributionToken() {
     })
     .catch(() => {
     });
-}
-
-export function getWaName() {
-  if (typeof window === "undefined") return null;
-  return window.localStorage.getItem(WA_NAME_KEY);
 }
 
 export function getAnonymousId() {

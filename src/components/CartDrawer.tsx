@@ -1,22 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import * as Dialog from "@radix-ui/react-dialog";
 import {
   ArrowRight,
-  Gift,
   Loader2,
   ShoppingBag,
-  Sparkles,
   Trash2,
   X,
 } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
-import { useCountUp } from "@/hooks/useCountUp";
 import { trackEvent } from "@/lib/analytics";
-import { toNumericVariantId, SHIPROCKET_COUPON_CODE } from "@/lib/shiprocket";
+import { toNumericVariantId } from "@/lib/shiprocket";
 
 export default function CartDrawer() {
   const {
@@ -26,12 +22,7 @@ export default function CartDrawer() {
     cart,
     cartCount,
     cartTotal,
-    addToCart,
     removeFromCart,
-    gifts,
-    giftTotal,
-    toggleGift,
-    mysteryGiftId,
   } = useAppStore();
 
   const [loading, setLoading] = useState(false);
@@ -64,8 +55,8 @@ export default function CartDrawer() {
     (s, l) => s + (l.product.mrp ?? l.product.price) * l.qty,
     0
   );
-  const savings = mrpTotal - cartTotal + giftTotal;
-  const totalMrp = mrpTotal + giftTotal;
+  const savings = mrpTotal - cartTotal;
+  const totalMrp = mrpTotal;
 
   function handleCheckout() {
     setError(null);
@@ -77,14 +68,10 @@ export default function CartDrawer() {
 
     setLoading(true);
     trackEvent("checkout_started", {
-      gift_count: gifts.length,
-      redeem_item_count: cartCount,
+      cart_item_count: cartCount,
       cart_value: cartTotal,
     });
 
-    // Build Shiprocket product list: cart items + free gifts.
-    // The mystery gift is excluded — Shiprocket's discount code adds it
-    // automatically, so including it here would duplicate it in checkout.
     const products: ShiprocketProduct[] = [
       ...cart.flatMap((line) =>
         Array.from({ length: line.qty }, () => ({
@@ -92,17 +79,11 @@ export default function CartDrawer() {
           quantity: 1,
         }))
       ),
-      ...gifts
-        .filter((g) => g.id !== mysteryGiftId)
-        .map((g) => ({
-          variantId: toNumericVariantId(g.variantId ?? g.id),
-          quantity: 1,
-        })),
     ];
 
     const cartAttributes: Record<string, unknown> = {
-      gift_count: gifts.length,
-      gift_total: giftTotal,
+      cart_count: cartCount,
+      cart_value: cartTotal,
     };
 
     const buyDirect = window.shiprocketCheckoutEvents?.buyDirect;
@@ -120,7 +101,6 @@ export default function CartDrawer() {
     buyDirect({
       type: "cart",
       products,
-      couponCode: SHIPROCKET_COUPON_CODE || undefined,
       cartAttributes,
     });
     console.log("[Checkout] buyDirect called successfully");
@@ -159,147 +139,67 @@ export default function CartDrawer() {
 
           {/* Scrollable body */}
           <div className="flex-1 overflow-y-auto px-5 py-4">
-            {cartCount === 0 && gifts.length === 0 ? (
+            {cartCount === 0 ? (
               <EmptyState onClose={closeCart} />
             ) : (
-              <>
-                {cart.length === 0 && gifts.length > 0 && (
-                  <Link
-                    href="/redeem"
-                    onClick={closeCart}
-                    className="mb-4 flex items-center gap-3 rounded-xl border border-dashed border-terracotta-300 bg-terracotta-50 px-4 py-3 transition hover:bg-terracotta-100"
-                  >
-                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-terracotta-500 text-white">
-                      <ShoppingBag size={18} />
-                    </span>
-                    <div className="flex-1">
-                      <p className="text-sm font-bold text-terracotta-800">
-                        One last step!
-                      </p>
-                      <p className="text-xs text-terracotta-600">
-                        Purchase any product to claim your gifts at ₹0
-                      </p>
-                    </div>
-                    <ArrowRight size={18} className="shrink-0 text-terracotta-500" />
-                  </Link>
-                )}
-
-                {cart.length > 0 && (
-                  <ul className="flex flex-col gap-3">
-                    {expandedItems.map((item, idx) => {
-                      const p = item.product;
-                      const saved = p.mrp ? p.mrp - p.price : 0;
-                      return (
-                        <li
-                          key={`${p.id}-${idx}`}
-                          className="flex gap-3 rounded-xl bg-gray-50 p-3"
-                        >
-                          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg">
-                            <Image
-                              src={p.image}
-                              alt={p.name}
-                              fill
-                              sizes="80px"
-                              className="object-cover"
-                            />
-                          </div>
-                          <div className="flex flex-1 flex-col">
-                            <div className="flex items-start justify-between gap-2">
-                              <h3 className="line-clamp-2 text-sm font-semibold text-gray-900">
-                                {p.name}
-                              </h3>
-                              <button
-                                aria-label={`Remove ${p.name}`}
-                                onClick={() => removeFromCart(p.id)}
-                                className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-gray-400 transition hover:bg-gray-200 hover:text-gray-700"
-                              >
-                                <Trash2 size={15} />
-                              </button>
-                            </div>
-
-                            <div className="mt-1 flex items-baseline gap-2">
-                              <span className="text-sm font-bold text-gray-900">
-                                ₹{p.price}
-                              </span>
-                              {p.mrp && p.mrp > p.price && (
-                                <span className="text-xs text-gray-400 line-through">
-                                  ₹{p.mrp}
-                                </span>
-                              )}
-                              {saved > 0 && (
-                                <span className="rounded bg-sage-100 px-1.5 py-0.5 text-[10px] font-semibold text-sage-700">
-                                  Save ₹{saved}
-                                </span>
-                              )}
-                            </div>
-
-                            <div className="mt-auto flex items-center justify-end pt-2">
-                              <span className="text-sm font-bold text-gray-900">
-                                ₹{p.price}
-                              </span>
-                            </div>
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-
-                {gifts.length > 0 && (
-                  <div className="mt-5">
-                    <div className="mb-2 flex items-center gap-2 text-sm font-bold uppercase tracking-wide text-sage-700">
-                      🎁 Free gifts ({gifts.length})
-                      <span className="ml-auto flex items-baseline gap-1.5">
-                        <span className="text-sm font-bold line-through">
-                          ₹{giftTotal}
-                        </span>
-                        <span className="text-[11px] font-semibold uppercase tracking-wide text-sage-700">
-                          FREE
-                        </span>
-                      </span>
-                    </div>
-                    <ul className="flex flex-col gap-2">
-                      {gifts.map((g) => (
-                        <li
-                          key={g.id}
-                          className="flex items-center gap-3 rounded-xl bg-sage-50 p-3 ring-1 ring-sage-100"
-                        >
-                          <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-md">
-                            <Image
-                              src={g.image}
-                              alt={g.name}
-                              fill
-                              sizes="48px"
-                              className="object-cover"
-                            />
-                          </div>
-                          <div className="flex-1">
-                            <p className="line-clamp-1 text-sm font-medium text-gray-800">
-                              {g.name}
-                            </p>
-                            <div className="flex items-baseline gap-1.5">
-                              <span className="text-sm font-bold line-through">
-                                ₹{g.price}
-                              </span>
-                              <p className="text-[11px] font-semibold uppercase tracking-wide text-sage-700">
-                                Free
-                              </p>
-                            </div>
-                          </div>
+              <ul className="flex flex-col gap-3">
+                {expandedItems.map((item, idx) => {
+                  const p = item.product;
+                  const saved = p.mrp ? p.mrp - p.price : 0;
+                  return (
+                    <li
+                      key={`${p.id}-${idx}`}
+                      className="flex gap-3 rounded-xl bg-gray-50 p-3"
+                    >
+                      <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-lg">
+                        <Image
+                          src={p.image}
+                          alt={p.name}
+                          fill
+                          sizes="80px"
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex flex-1 flex-col">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="line-clamp-2 text-sm font-semibold text-gray-900">
+                            {p.name}
+                          </h3>
                           <button
-                            aria-label={`Remove ${g.name}`}
-                            onClick={() => toggleGift(g)}
-                            className="grid h-7 w-7 place-items-center rounded-md text-sage-700 transition hover:bg-sage-100"
+                            aria-label={`Remove ${p.name}`}
+                            onClick={() => removeFromCart(p.id)}
+                            className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-gray-400 transition hover:bg-gray-200 hover:text-gray-700"
                           >
-                            <X size={14} />
+                            <Trash2 size={15} />
                           </button>
-                        </li>
-                      ))}
-                    </ul>
-                    {giftTotal > 0 && <SavingsBanner amount={giftTotal} open={cartOpen} />}
-                  </div>
-                )}
-              </>
+                        </div>
+
+                        <div className="mt-1 flex items-baseline gap-2">
+                          <span className="text-sm font-bold text-gray-900">
+                            ₹{p.price}
+                          </span>
+                          {p.mrp && p.mrp > p.price && (
+                            <span className="text-xs text-gray-400 line-through">
+                              ₹{p.mrp}
+                            </span>
+                          )}
+                          {saved > 0 && (
+                            <span className="rounded bg-sage-100 px-1.5 py-0.5 text-[10px] font-semibold text-sage-700">
+                              Save ₹{saved}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="mt-auto flex items-center justify-end pt-2">
+                          <span className="text-sm font-bold text-gray-900">
+                            ₹{p.price}
+                          </span>
+                        </div>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </div>
 
@@ -358,28 +258,6 @@ export default function CartDrawer() {
   );
 }
 
-function SavingsBanner({ amount, open }: { amount: number; open: boolean }) {
-  const value = useCountUp(amount, `${open}-${amount}`);
-
-  return (
-    <div
-      key={`${open}-${amount}`}
-      className="mt-3 flex items-center gap-2.5 rounded-xl border border-dashed border-emerald-300 bg-emerald-50 px-3.5 py-2.5 animate-pop"
-    >
-      <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-emerald-100 text-emerald-700">
-        <Sparkles size={14} />
-      </span>
-      <p className="text-[13px] font-semibold leading-tight text-emerald-800">
-        <span className="font-bold">Yay!</span> you saved{" "}
-        <span className="font-bold tabular-nums">
-          ₹{value.toLocaleString("en-IN")}
-        </span>{" "}
-        with free gifts
-      </p>
-    </div>
-  );
-}
-
 function EmptyState({ onClose }: { onClose: () => void }) {
   return (
     <div className="flex h-full flex-col items-center justify-center px-6 py-16 text-center">
@@ -390,7 +268,7 @@ function EmptyState({ onClose }: { onClose: () => void }) {
         Your cart is empty
       </h3>
       <p className="mt-1 text-sm text-gray-500">
-        Pick free gifts and add products to redeem them.
+        Add products you love to get started.
       </p>
       <button
         onClick={onClose}

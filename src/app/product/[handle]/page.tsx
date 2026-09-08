@@ -5,8 +5,6 @@ import ProductDetails from "./ProductDetails";
 
 export const revalidate = 3600;
 
-const MYSTERY_GIFT_HANDLE = "free-mystery-jewellery";
-
 // Pre-render all product pages at build time so they're served from the CDN
 // with zero serverless function invocations. ISR revalidates every hour.
 export async function generateStaticParams() {
@@ -24,12 +22,8 @@ export default async function ProductPage({
   params: { handle: string };
 }) {
   let product = null;
-  let mysteryGift = null;
   try {
-    [product, mysteryGift] = await Promise.all([
-      getProductByHandle(params.handle),
-      getProductByHandle(MYSTERY_GIFT_HANDLE),
-    ]);
+    product = await getProductByHandle(params.handle);
   } catch (err) {
     console.error("Failed to load product from Shopify:", err);
   }
@@ -38,7 +32,7 @@ export default async function ProductPage({
 
   return (
     <Suspense>
-      <ProductDetails product={product} mysteryGift={mysteryGift} />
+      <ProductDetails product={product} />
     </Suspense>
   );
 }

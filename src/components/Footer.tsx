@@ -24,14 +24,14 @@ export default function Footer({ categories }: { categories: Category[] }) {
     setEmail("");
   };
 
-  // Reuse the redeem screen's category mechanism: persist the selected
-  // collection id then navigate to /redeem, which reads it on mount.
+  // Reuse the home screen's category mechanism: persist the selected
+  // collection id then navigate to /, which reads it on mount.
   const goToCollection = (categoryId: string | null) => {
     if (typeof window !== "undefined") {
-      if (categoryId) window.sessionStorage.setItem("redeem:category", categoryId);
-      else window.sessionStorage.removeItem("redeem:category");
+      if (categoryId) window.sessionStorage.setItem("shop:category", categoryId);
+      else window.sessionStorage.removeItem("shop:category");
     }
-    router.push("/redeem");
+    router.push("/");
   };
 
   return (

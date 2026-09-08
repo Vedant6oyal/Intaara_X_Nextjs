@@ -3,15 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, ShoppingBag, Gift, X, Truck, RotateCcw, ShieldCheck, FileText, Home, Sparkles, Heart } from "lucide-react";
+import { Menu, ShoppingBag, X, Truck, RotateCcw, ShieldCheck, FileText, Home, Heart } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 
 export default function Header({ title = "INTAARA" }: { title?: string }) {
-  const { cartCount, gifts, openCart, wishlist, openWishlist } = useAppStore();
+  const { cartCount, openCart, wishlist, openWishlist } = useAppStore();
   const pathname = usePathname();
-  const isGiftScreen = pathname === "/";
-  const isRedeemScreen = pathname === "/redeem";
-  const shouldHideOnScroll = isGiftScreen || isRedeemScreen;
+  const shouldHideOnScroll = pathname === "/";
 
   const [hidden, setHidden] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -32,8 +30,7 @@ export default function Header({ title = "INTAARA" }: { title?: string }) {
   }, [shouldHideOnScroll]);
 
   const menuLinks = [
-    { href: "/", label: "Pick Free Gift", icon: Sparkles },
-    { href: "/redeem", label: "Shop", icon: Home },
+    { href: "/", label: "Shop", icon: Home },
   ];
 
   const policyLinks = [
@@ -66,14 +63,6 @@ export default function Header({ title = "INTAARA" }: { title?: string }) {
           />
 
           <div className="flex items-center gap-3 text-cream/90">
-            <Link href="/" aria-label="Pick free gifts" className="relative transition hover:text-white">
-              <Gift size={22} />
-              {gifts.length > 0 && (
-                <span className="absolute -right-2 -top-2 grid h-4 w-4 place-items-center rounded-full bg-terracotta-500 text-[10px] font-bold text-white ring-2 ring-sage-700">
-                  {gifts.length}
-                </span>
-              )}
-            </Link>
             <button
               type="button"
               aria-label="Open wishlist"

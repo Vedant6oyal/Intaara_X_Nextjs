@@ -11,7 +11,7 @@ export default function PolicyLayout({
   return (
     <div className="px-5 pb-24 pt-6">
       <Link
-        href="/redeem"
+        href="/"
         className="mb-6 inline-flex items-center gap-1.5 text-sm font-medium text-gray-500 transition hover:text-gray-900"
       >
         <ArrowLeft size={16} />

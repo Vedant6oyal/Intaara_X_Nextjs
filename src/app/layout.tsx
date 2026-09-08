@@ -20,9 +20,9 @@ const nunito = Nunito_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Intaara · Gift & Redeem",
+  title: "Intaara · Anti-Tarnish Jewellery",
   description:
-    "Pick free anti-tarnish jewellery gifts worth up to ₹1000, then redeem them with your purchase.",
+    "Shop premium anti-tarnish, waterproof, 18k gold-plated demi-fine jewellery with free shipping across India.",
   icons: {
     icon: [
       { url: "https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/favicon.ico", sizes: "any" },

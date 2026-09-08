@@ -11,9 +11,9 @@ export default function ProductCard({ product }: { product: Product }) {
   const qty = inCart(product.id);
   const wishlisted = isWishlisted(product.id);
   const saved = product.mrp ? product.mrp - product.price : 0;
-  const href = product.handle ? `/product/${product.handle}?from=redeem` : "#";
+  const href = product.handle ? `/product/${product.handle}` : "#";
   const saveScrollPosition = () => {
-    window.sessionStorage.setItem("redeem:scroll", String(window.scrollY));
+    window.sessionStorage.setItem("shop:scroll", String(window.scrollY));
   };
 
   return (

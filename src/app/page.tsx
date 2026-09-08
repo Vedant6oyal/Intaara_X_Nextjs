@@ -1,31 +1,17 @@
-import { getAllGiftProducts, getShopCollections, getProductByHandle } from "@/lib/products";
+import { getAllShopProducts, getShopCollections } from "@/lib/products";
 import type { Category, Product } from "@/data/products";
-import GiftingScreen from "./GiftingScreen";
+import HomeScreen from "./HomeScreen";
 
 export const revalidate = 3600;
 
-const MYSTERY_GIFT_HANDLE = "free-mystery-jewellery";
-
-export default async function GiftingPage() {
+export default async function HomePage() {
   let products: Product[] = [];
   let categories: Category[] = [];
-  let mysteryGift: Product | null = null;
   try {
-    [products, mysteryGift] = await Promise.all([
-      getAllGiftProducts(),
-      getProductByHandle(MYSTERY_GIFT_HANDLE),
-    ]);
+    products = await getAllShopProducts();
     categories = await getShopCollections(products);
   } catch (err) {
-    console.error("Fail to load gift products from Shopify:", err);
+    console.error("Failed to load shop data from Shopify:", err);
   }
-  return (
-    <GiftingScreen
-      products={products}
-      hasNextPage={false}
-      endCursor={null}
-      categories={categories}
-      mysteryGift={mysteryGift}
-    />
-  );
+  return <HomeScreen products={products} categories={categories} />;
 }

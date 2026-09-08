@@ -1,25 +1,20 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Banknote,
-  Bus,
-  Check,
-  Droplets,
   Feather,
   Heart,
   Loader2,
   Minus,
   Plus,
   RotateCcw,
-  Share2,
   ShieldCheck,
   ShoppingBag,
-  Sparkles,
   Star,
   Truck,
 } from "lucide-react";
@@ -27,26 +22,14 @@ import { useAppStore } from "@/store/AppStore";
 import { useReviews } from "@/hooks/useReviews";
 import type { Product } from "@/data/products";
 import type { Review, ReviewSummary } from "@/lib/reviews";
-import { trackEvent } from "@/lib/analytics";
 
 export default function ProductDetails({
   product,
-  mysteryGift,
 }: {
   product: Product;
-  mysteryGift: Product | null;
 }) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const fromRedeem = searchParams.get("from") === "redeem";
   const {
-    isGiftSelected,
-    toggleGift,
-    giftsFull,
-    gift2Locked,
-    unlockGift2,
-    ensureMysteryGift,
-    hydrated,
     inCart,
     addToCart,
     removeFromCart,
@@ -56,18 +39,9 @@ export default function ProductDetails({
     toggleWishlist,
   } = useAppStore();
 
-  // Self-heal: guarantee the mystery gift occupies slot 2 whenever gift2 is
-  // unlocked (fixes stale or pre-feature persisted state).
-  useEffect(() => {
-    if (hydrated && mysteryGift) ensureMysteryGift(mysteryGift);
-  }, [hydrated, mysteryGift, ensureMysteryGift]);
-
   // Reviews load client-side directly from Supabase (no serverless function).
   const { data: reviewSummary, loading: reviewsLoading } = useReviews();
 
-
-  const isGift = !fromRedeem && !product.tags?.some((t) => t.toLowerCase() === "non-gift");
-  const selected = isGiftSelected(product.id);
   const qty = inCart(product.id);
   const saved = product.mrp ? product.mrp - product.price : 0;
   const discountPct =
@@ -149,12 +123,7 @@ export default function ProductDetails({
           priority
         />
 
-        {isGift && (
-          <span className="absolute left-3 top-3 rounded-md bg-terracotta-500/95 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-white shadow">
-            Free Gift
-          </span>
-        )}
-        {!isGift && discountPct > 0 && (
+        {discountPct > 0 && (
           <span className="absolute left-3 top-3 rounded-md bg-sage-700 px-2 py-1 text-[11px] font-bold text-white shadow">
             Demi-Fine
           </span>
@@ -233,37 +202,22 @@ export default function ProductDetails({
 
       {/* Price block */}
       <section className="mt-4 px-4">
-        {isGift ? (
-          <div className="flex items-baseline gap-3">
-            <span className="font text-3xl font-bold text-sage-700">
-              FREE
+        <div className="flex items-baseline gap-3">
+          <span className="font text-2xl font-bold text-gray-900">
+            ₹{product.price.toLocaleString("en-IN")}
+          </span>
+          {product.mrp && (
+            <span className="text-lg font-semibold text-gray-400 line-through">
+              ₹{product.mrp.toLocaleString("en-IN")}
             </span>
-            <span className="text-xl font-semibold text-gray-400 line-through decoration-[2px]">
-              ₹{(product.mrp ?? product.price).toLocaleString("en-IN")}
+          )}
+          {saved > 0 && (
+            <span className="rounded-md bg-sage-100 px-2 py-0.5 text-xs font-bold text-sage-700">
+              Save ₹{saved}
             </span>
-          </div>
-        ) : (
-          <div className="flex items-baseline gap-3">
-            <span className="font text-2xl font-bold text-gray-900">
-              ₹{product.price.toLocaleString("en-IN")}
-            </span>
-            {product.mrp && (
-              <span className="text-lg font-semibold text-gray-400 line-through">
-                ₹{product.mrp.toLocaleString("en-IN")}
-              </span>
-            )}
-            {saved > 0 && (
-              <span className="rounded-md bg-sage-100 px-2 py-0.5 text-xs font-bold text-sage-700">
-                Save ₹{saved}
-              </span>
-            )}
-          </div>
-        )}
-        <p className="mt-1 text-xs text-gray-500">
-          {isGift
-            ? "free on first purchase."
-            : "Inclusive of all taxes."}
-        </p>
+          )}
+        </div>
+        <p className="mt-1 text-xs text-gray-500">Inclusive of all taxes.</p>
       </section>
 
       {/* Trust badges */}
@@ -330,22 +284,17 @@ export default function ProductDetails({
         </div>
       </section>
 
-      {/* Free-gift teaser for non-gift products */}
-      {!isGift && (
-        <section className="mt-6 px-4">
-          <Link
-            href="/"
-            className="flex items-center justify-between rounded-2xl bg-gradient-to-br from-sage-700 to-sage-800 p-4 text-white shadow"
-          >
-            <div>
-              <p className="mt-1 text-sm font-semibold">
-                All orders are dispatched within 24 hours
-              </p>
-            </div>
-            <Truck size={22} className="text-amber-300" />
-          </Link>
-        </section>
-      )}
+      {/* Dispatch banner */}
+      <section className="mt-6 px-4">
+        <div className="flex items-center justify-between rounded-2xl bg-gradient-to-br from-sage-700 to-sage-800 p-4 text-white shadow">
+          <div>
+            <p className="mt-1 text-sm font-semibold">
+              All orders are dispatched within 24 hours
+            </p>
+          </div>
+          <Truck size={22} className="text-amber-300" />
+        </div>
+      </section>
 
       {/* Customer reviews */}
       <CustomerReviews
@@ -357,58 +306,7 @@ export default function ProductDetails({
 
       {/* Sticky bottom CTA */}
       <div className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-[480px] border-t border-black/5 bg-white/95 px-4 py-3 backdrop-blur-md">
-        {isGift ? (
-          <button
-            onClick={() => {
-              if (!selected && giftsFull) return;
-              if (!selected && gift2Locked) {
-                trackEvent("share_cta_clicked", { share_channel: "whatsapp", source: "product_details" });
-                unlockGift2(mysteryGift ?? undefined);
-                const shareText = encodeURIComponent(
-                  "Hey! I just unlocked a FREE gift from Intaara 🎁 You can grab yours too! Check it out: https://intaara.com"
-                );
-                window.open(`https://api.whatsapp.com/send?text=${shareText}`, "_blank");
-                return;
-              }
-              toggleGift(product);
-              if (!selected) {
-                if (typeof window !== "undefined") {
-                  window.sessionStorage.setItem("gift:showSharePopup", "1");
-                }
-                setTimeout(() => {
-                  if (window.history.length > 1) router.back();
-                  else router.push("/");
-                }, 400);
-              }
-            }}
-            disabled={!selected && giftsFull}
-            className={`flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-sm font-bold transition ${
-              selected
-                ? "bg-sage-700 text-white"
-                : !selected && giftsFull
-                ? "cursor-not-allowed bg-gray-100 text-gray-400"
-                : !selected && gift2Locked
-                ? "bg-amber-50 text-amber-700 hover:bg-amber-100"
-                : "bg-[#1A3C2A] text-white shadow-lg hover:bg-[#152e20]"
-            }`}
-          >
-            {selected ? (
-              <>
-                <Check size={18} /> Added to Gift Box
-              </>
-            ) : giftsFull ? (
-              "Gift Box is Full"
-            ) : gift2Locked ? (
-              <>
-                <Share2 size={18} /> Share to Unlock
-              </>
-            ) : (
-              <>
-                <Plus size={18} /> Add as Free Gift
-              </>
-            )}
-          </button>
-        ) : qty === 0 ? (
+        {qty === 0 ? (
           <button
             onClick={() => addToCart(product)}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1A3C2A] py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-[#152e20]"

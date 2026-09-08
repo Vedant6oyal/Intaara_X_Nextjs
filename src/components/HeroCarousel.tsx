@@ -41,7 +41,7 @@ export default function HeroCarousel() {
           touchStartX.current = null;
         }}
         onClick={() => {
-          const el = document.getElementById("pick-gifts");
+          const el = document.getElementById("shop");
           if (!el) return;
           const start = window.scrollY;
           const end = el.getBoundingClientRect().top + window.scrollY - 10;

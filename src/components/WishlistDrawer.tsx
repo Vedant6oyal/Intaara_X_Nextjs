@@ -55,7 +55,7 @@ export default function WishlistDrawer() {
               </p>
               <Dialog.Close asChild>
                 <Link
-                  href="/redeem"
+                  href="/"
                   className="mt-2 rounded-xl bg-sage-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-sage-800"
                 >
                   Browse Products
@@ -67,7 +67,7 @@ export default function WishlistDrawer() {
               <div className="space-y-3">
                 {wishlist.map((product) => {
                   const href = product.handle
-                    ? `/product/${product.handle}?from=redeem`
+                    ? `/product/${product.handle}`
                     : "#";
                   return (
                     <div
