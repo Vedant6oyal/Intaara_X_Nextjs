@@ -15,7 +15,7 @@ const DEFAULT_REELS: Reel[] = [
   {
     id: "reel-1",
     src: "https://cdn.shopify.com/videos/c/o/v/1e910c6eefd84c1ca8a46806cb66e319.mp4",
-    poster: "https://cdn.shopify.com/files/./YOUR_POSTER_1.jpg",
+    poster: "https://cdn.shopify.com/files/./YOUR_POSTER_0.jpg",
     creator: "Intaara",
     handle: "@intaara.in",
   },
