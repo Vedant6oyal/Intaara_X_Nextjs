@@ -16,7 +16,6 @@ import {
 import { useAppStore } from "@/store/AppStore";
 import { useCountUp } from "@/hooks/useCountUp";
 import { trackEvent } from "@/lib/analytics";
-import { trackMetaEvent } from "@/components/MetaPixel";
 import { toNumericVariantId, SHIPROCKET_COUPON_CODE } from "@/lib/shiprocket";
 
 export default function CartDrawer() {
@@ -81,12 +80,6 @@ export default function CartDrawer() {
       gift_count: gifts.length,
       redeem_item_count: cartCount,
       cart_value: cartTotal,
-    });
-    trackMetaEvent("InitiateCheckout", {
-      content_type: "product",
-      num_items: cartCount,
-      value: cartTotal,
-      currency: "INR",
     });
 
     // Build Shiprocket product list: cart items + free gifts.
