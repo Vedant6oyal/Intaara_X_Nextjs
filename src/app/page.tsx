@@ -1,4 +1,4 @@
-import { getAllShopProducts, getShopCollections } from "@/lib/products";
+import { getAllShopProductsLight, getShopCollections } from "@/lib/products";
 import type { Category, Product } from "@/data/products";
 import HomeScreen from "./HomeScreen";
 
@@ -8,7 +8,7 @@ export default async function HomePage() {
   let products: Product[] = [];
   let categories: Category[] = [];
   try {
-    products = await getAllShopProducts();
+    products = await getAllShopProductsLight();
     categories = await getShopCollections(products);
   } catch (err) {
     console.error("Failed to load shop data from Shopify:", err);

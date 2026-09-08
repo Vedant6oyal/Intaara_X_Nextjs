@@ -6,6 +6,35 @@ import type { Category, Product } from "@/data/products";
 
 type ShopifyMoney = { amount: string; currencyCode: string };
 
+type ShopifyProductLightNode = {
+  id: string;
+  handle: string;
+  title: string;
+  tags: string[];
+  featuredImage: { url: string } | null;
+  priceRange: { minVariantPrice: { amount: string } };
+  compareAtPriceRange: { minVariantPrice: { amount: string } };
+  variants: {
+    edges: Array<{
+      node: {
+        id: string;
+        price: { amount: string };
+        compareAtPrice: { amount: string } | null;
+      };
+    }>;
+  };
+  collections: {
+    edges: Array<{ node: { id: string } }>;
+  };
+};
+
+type ProductsLightResponse = {
+  products: {
+    edges: Array<{ node: ShopifyProductLightNode; cursor: string }>;
+    pageInfo: { hasNextPage: boolean; endCursor: string | null };
+  };
+};
+
 type ShopifyProductNode = {
   id: string;
   handle: string;
@@ -96,6 +125,43 @@ const PRODUCTS_QUERY = /* GraphQL */ `
                 id
                 title
               }
+            }
+          }
+        }
+        cursor
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+
+const PRODUCTS_LIGHT_QUERY = /* GraphQL */ `
+  query ProductsLight($first: Int!, $after: String) {
+    products(first: $first, after: $after) {
+      edges {
+        node {
+          id
+          handle
+          title
+          tags
+          featuredImage { url }
+          priceRange { minVariantPrice { amount } }
+          compareAtPriceRange { minVariantPrice { amount } }
+          variants(first: 1) {
+            edges {
+              node {
+                id
+                price { amount }
+                compareAtPrice { amount }
+              }
+            }
+          }
+          collections(first: 20) {
+            edges {
+              node { id }
             }
           }
         }
@@ -275,6 +341,62 @@ export const getAllShopProducts = cache(async (): Promise<Product[]> => {
     cursor = page.endCursor;
   }
   return all;
+});
+
+function toProductLight(node: ShopifyProductLightNode): Product {
+  const variant = node.variants.edges[0]?.node;
+  const price = Number(
+    variant?.price.amount ?? node.priceRange.minVariantPrice.amount ?? 0
+  );
+  const compareAt = Number(
+    variant?.compareAtPrice?.amount ??
+      node.compareAtPriceRange.minVariantPrice.amount ??
+      0
+  );
+  const category = node.tags.find((t) => t.toLowerCase() !== "non-gift");
+  const featured = node.featuredImage?.url ?? FALLBACK_IMAGE;
+  return {
+    id: node.id,
+    variantId: variant?.id,
+    handle: node.handle,
+    name: node.title,
+    price: Math.round(price),
+    mrp: compareAt > price ? Math.round(compareAt) : undefined,
+    image: featured,
+    tags: node.tags,
+    category,
+    collections: node.collections.edges.map((e) => e.node.id),
+  };
+}
+
+/** Lightweight fetch: only grid-essential fields, no descriptionHtml or images. */
+export const getAllShopProductsLight = cache(async (): Promise<Product[]> => {
+  const all: Product[] = [];
+  let cursor: string | null = null;
+  let hasNext = true;
+  while (hasNext) {
+    const data: ProductsLightResponse = await shopifyFetch<ProductsLightResponse>({
+      query: PRODUCTS_LIGHT_QUERY,
+      variables: { first: 250, after: cursor },
+    });
+    all.push(...data.products.edges.map((e: { node: ShopifyProductLightNode }) => toProductLight(e.node)));
+    hasNext = data.products.pageInfo.hasNextPage;
+    cursor = data.products.pageInfo.endCursor;
+  }
+  return all;
+});
+
+/** Fetch only collections for the footer — no product data needed. */
+export const getCollectionsOnly = cache(async (): Promise<Category[]> => {
+  const data = await shopifyFetch<CollectionsResponse>({
+    query: COLLECTIONS_QUERY,
+    variables: { first: 50 },
+  });
+  return data.collections.edges.map((e) => ({
+    id: e.node.id,
+    name: e.node.title,
+    image: e.node.image?.url ?? FALLBACK_IMAGE,
+  }));
 });
 
 /** Derive category circles from the unique non-"non-gift" tags on shop products. */

@@ -9,7 +9,7 @@ import Footer from "@/components/Footer";
 import ShiprocketLoader from "@/components/ShiprocketLoader";
 import MetaPixel from "@/components/MetaPixel";
 import AnalyticsTracker from "@/components/AnalyticsTracker";
-import { getAllShopProducts, getShopCollections } from "@/lib/products";
+import { getCollectionsOnly } from "@/lib/products";
 import type { Category } from "@/data/products";
 
 const nunito = Nunito_Sans({
@@ -51,8 +51,7 @@ export default async function RootLayout({
 }) {
   let categories: Category[] = [];
   try {
-    const products = await getAllShopProducts();
-    categories = await getShopCollections(products);
+    categories = await getCollectionsOnly();
   } catch (err) {
     console.error("Failed to load footer collections:", err);
   }
