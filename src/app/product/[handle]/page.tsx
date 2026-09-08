@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
-import { getProductByHandle, getShopProducts } from "@/lib/products";
+import { getProductByHandle, getAllShopProductsLight } from "@/lib/products";
 import ProductDetails from "./ProductDetails";
 
 export const revalidate = 3600;
@@ -9,7 +9,7 @@ export const revalidate = 3600;
 // with zero serverless function invocations. ISR revalidates every hour.
 export async function generateStaticParams() {
   try {
-    const { products } = await getShopProducts();
+    const products = await getAllShopProductsLight();
     return products.map((p) => ({ handle: p.handle }));
   } catch {
     return [];
