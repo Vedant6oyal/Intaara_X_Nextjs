@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import { useAppStore } from "@/store/AppStore";
 import { useReviews } from "@/hooks/useReviews";
+import { trackEvent } from "@/lib/analytics";
+import { toNumericVariantId } from "@/lib/shiprocket";
 import type { Product } from "@/data/products";
 import type { Review, ReviewSummary } from "@/lib/reviews";
 
@@ -43,6 +45,7 @@ export default function ProductDetails({
   const { data: reviewSummary, loading: reviewsLoading } = useReviews();
 
   const qty = inCart(product.id);
+  const [buyingNow, setBuyingNow] = useState(false);
   const saved = product.mrp ? product.mrp - product.price : 0;
   const discountPct =
     product.mrp && product.mrp > product.price
@@ -60,10 +63,37 @@ export default function ProductDetails({
     for (let i = 0; i < product.name.length; i++) {
       hash = (hash * 31 + product.name.charCodeAt(i)) >>> 0;
     }
-    return 100 + (hash % 151); // 100–250 inclusive
+    return 50 + (hash % 51); // 50–100 inclusive
   })();
   const reviewCount = fallbackCount;
   const averageRating = reviewSummary?.average || 4.9;
+
+  function handleBuyNow() {
+    setBuyingNow(true);
+    trackEvent("checkout_started", {
+      source: "buy_now",
+      product_id: product.id,
+      product_name: product.name,
+    });
+
+    const buyDirect = window.shiprocketCheckoutEvents?.buyDirect;
+    if (!buyDirect) {
+      setBuyingNow(false);
+      return;
+    }
+
+    buyDirect({
+      type: "product",
+      products: [
+        {
+          variantId: toNumericVariantId(product.variantId ?? product.id),
+          quantity: 1,
+        },
+      ],
+    });
+
+    setTimeout(() => setBuyingNow(false), 8000);
+  }
 
   return (
     <div className="pb-28">
@@ -72,7 +102,11 @@ export default function ProductDetails({
         <button
           aria-label="Back"
           onClick={() => {
-            if (window.history.length > 1) router.back();
+            const hasInternalReferrer =
+              document.referrer &&
+              new URL(document.referrer).origin === window.location.origin;
+            if (hasInternalReferrer && window.history.length > 1)
+              router.back();
             else router.push("/");
           }}
           className="grid h-9 w-9 place-items-center rounded-full bg-sage-50 text-sage-700 hover:bg-sage-100"
@@ -225,7 +259,7 @@ export default function ProductDetails({
         <Badge icon={<img src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Icons/gold_plated_icon.png" alt="" loading="lazy" className="h-5 w-5 object-contain" />} label="18k gold plated" />
         <Badge icon={<img src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Icons/waterproof_1.png" alt="" loading="lazy" className="h-5 w-5 object-contain" />} label="Waterproof" />
         <Badge icon={<img src="https://sarvfyflentltumwxzet.supabase.co/storage/v1/object/public/Intaara/Icons/skin_friendly.png" alt="" loading="lazy" className="h-5 w-5 object-contain" />} label="Skin Friendly" />
-    <Badge icon={<RotateCcw size={16} />} label="24hr return" />
+    <Badge icon={<RotateCcw size={16} />} label="48hr return" />
         <div className="flex flex-col items-center gap-1 rounded-xl bg-amber-50 px-2 py-3 text-center ring-1 ring-amber-200">
           <Banknote size={16} className="text-amber-600" />
           <span className="text-[13px] font-bold text-gray-700">Cash on delivery</span>
@@ -307,13 +341,27 @@ export default function ProductDetails({
       {/* Sticky bottom CTA */}
       <div className="fixed inset-x-0 bottom-0 z-30 mx-auto w-full max-w-[480px] border-t border-black/5 bg-white/95 px-4 py-3 backdrop-blur-md">
         {qty === 0 ? (
-          <button
-            onClick={() => addToCart(product)}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1A3C2A] py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-[#152e20]"
-          >
-            <ShoppingBag size={18} /> Add to Cart · ₹
-            {product.price.toLocaleString("en-IN")}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => addToCart(product)}
+              className="flex items-center justify-center gap-2 rounded-xl border border-[#1A3C2A] bg-white px-4 py-3.5 text-sm font-bold text-[#1A3C2A] transition hover:bg-sage-50"
+            >
+              <ShoppingBag size={18} /> Add to Cart
+            </button>
+            <button
+              onClick={handleBuyNow}
+              disabled={buyingNow}
+              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#1A3C2A] py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-[#152e20] disabled:opacity-60"
+            >
+              {buyingNow ? (
+                <Loader2 size={18} className="animate-spin" />
+              ) : (
+                <>
+                  Buy Now · ₹{product.price.toLocaleString("en-IN")}
+                </>
+              )}
+            </button>
+          </div>
         ) : (
           <div className="flex items-center gap-3">
             <div className="flex flex-1 items-center justify-between rounded-xl bg-sage-50 px-3 py-2">
@@ -336,10 +384,15 @@ export default function ProductDetails({
               </button>
             </div>
             <button
-              onClick={openCart}
-              className="flex-1 rounded-xl bg-[#1A3C2A] py-3 text-sm font-bold text-white shadow-lg transition hover:bg-[#152e20]"
+              onClick={handleBuyNow}
+              disabled={buyingNow}
+              className="flex-1 rounded-xl bg-[#1A3C2A] py-3 text-sm font-bold text-white shadow-lg transition hover:bg-[#152e20] disabled:opacity-60"
             >
-              View Cart
+              {buyingNow ? (
+                <Loader2 size={16} className="animate-spin" />
+              ) : (
+                "Buy Now"
+              )}
             </button>
           </div>
         )}

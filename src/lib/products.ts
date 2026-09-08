@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 
 import { shopifyFetch } from "./shopify";
 import type { Category, Product } from "@/data/products";
@@ -263,7 +264,7 @@ export async function getShopProducts(): Promise<ProductPage> {
 }
 
 /** Redeem & Shop screen: ALL products, paginating through every page. */
-export async function getAllShopProducts(): Promise<Product[]> {
+export const getAllShopProducts = cache(async (): Promise<Product[]> => {
   const all: Product[] = [];
   let cursor: string | null = null;
   let hasNext = true;
@@ -274,7 +275,7 @@ export async function getAllShopProducts(): Promise<Product[]> {
     cursor = page.endCursor;
   }
   return all;
-}
+});
 
 /** Derive category circles from the unique non-"non-gift" tags on shop products. */
 export function deriveCategories(products: Product[]): Category[] {
@@ -301,9 +302,8 @@ type CollectionsResponse = {
  * actually contain at least one shop product are returned, each using the
  * collection's image (falling back to a member product's image).
  */
-export async function getShopCollections(
-  products: Product[]
-): Promise<Category[]> {
+export const getShopCollections = cache(
+  async (products: Product[]): Promise<Category[]> => {
   const data = await shopifyFetch<CollectionsResponse>({
     query: COLLECTIONS_QUERY,
     variables: { first: 50 },
@@ -327,4 +327,5 @@ export async function getShopCollections(
       name: c.title,
       image: c.image?.url ?? fallbackImage.get(c.id) ?? FALLBACK_IMAGE,
     }));
-}
+  }
+);
