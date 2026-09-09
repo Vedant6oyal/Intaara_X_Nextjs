@@ -3,6 +3,7 @@
 export const ANALYTICS_EVENT_NAMES = [
   "landing_viewed",
   "page_viewed",
+  "product_viewed",
   "product_added",
   "product_removed",
   "checkout_started",

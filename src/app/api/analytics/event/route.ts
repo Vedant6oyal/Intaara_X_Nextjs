@@ -6,6 +6,7 @@ export const runtime = "nodejs";
 const EVENT_NAMES = new Set([
   "landing_viewed",
   "page_viewed",
+  "product_viewed",
   "product_added",
   "product_removed",
   "checkout_started",

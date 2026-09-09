@@ -105,6 +105,12 @@ export default function CartDrawer() {
     });
     console.log("[Checkout] buyDirect called successfully");
 
+    trackEvent("checkout_opened", {
+      source: "cart",
+      cart_item_count: cartCount,
+      cart_value: cartTotal,
+    });
+
     // Reset loading after 8s in case Shiprocket overlay is slow/fails to appear.
     setTimeout(() => setLoading(false), 8000);
   }

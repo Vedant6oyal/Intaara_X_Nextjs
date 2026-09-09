@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
@@ -56,6 +56,16 @@ export default function ProductDetails({
   const [activeImg, setActiveImg] = useState(0);
   const touchStartX = useRef<number | null>(null);
 
+  useEffect(() => {
+    trackEvent("product_viewed", {
+      product_id: product.id,
+      product_handle: product.handle ?? null,
+      product_name: product.name,
+      product_price: product.price,
+      product_category: product.category ?? null,
+    });
+  }, [product.id]);
+
   // Prefer real review counts from Supabase; fall back to a deterministic
   // pseudo-count derived from the product name so it's stable per product.
   const fallbackCount = (() => {
@@ -90,6 +100,12 @@ export default function ProductDetails({
           quantity: 1,
         },
       ],
+    });
+
+    trackEvent("checkout_opened", {
+      source: "buy_now",
+      product_id: product.id,
+      product_name: product.name,
     });
 
     setTimeout(() => setBuyingNow(false), 8000);
