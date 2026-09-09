@@ -367,13 +367,16 @@ export default function ProductDetails({
             <button
               onClick={handleBuyNow}
               disabled={buyingNow}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#1A3C2A] py-3.5 text-sm font-bold text-white shadow-lg transition hover:bg-[#152e20] disabled:opacity-60"
+              className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl bg-black py-2.5 shadow-lg transition hover:bg-black/90 disabled:opacity-60"
             >
               {buyingNow ? (
-                <Loader2 size={18} className="animate-spin" />
+                <Loader2 size={18} className="animate-spin text-white" />
               ) : (
                 <>
-                  Buy Now · ₹{product.price.toLocaleString("en-IN")}
+                  <span className="text-sm font-bold text-white">Buy Now</span>
+                  <span className="text-[9px] font-medium text-white/60">
+                    Powered By Shiprocket
+                  </span>
                 </>
               )}
             </button>
@@ -402,12 +405,17 @@ export default function ProductDetails({
             <button
               onClick={handleBuyNow}
               disabled={buyingNow}
-              className="flex-1 rounded-xl bg-[#1A3C2A] py-3 text-sm font-bold text-white shadow-lg transition hover:bg-[#152e20] disabled:opacity-60"
+              className="flex flex-1 flex-col items-center justify-center gap-0.5 rounded-xl bg-black py-2 shadow-lg transition hover:bg-black/90 disabled:opacity-60"
             >
               {buyingNow ? (
-                <Loader2 size={16} className="animate-spin" />
+                <Loader2 size={16} className="animate-spin text-white" />
               ) : (
-                "Buy Now"
+                <>
+                  <span className="text-sm font-bold text-white">Buy Now</span>
+                  <span className="text-[9px] font-medium text-white/60">
+                    Powered By Shiprocket
+                  </span>
+                </>
               )}
             </button>
           </div>
